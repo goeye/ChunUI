@@ -56,6 +56,7 @@ AppHelper.shared.presentSheet(.form) { EditView() }
 
 | 症状 | 解法 |
 |---|---|
+| shader 特效黑块 | 宿主自绘调了 `ShaderLibrary.xxx`（主 bundle 无 metallib，函数查找失败即渲染黑块）。一律改 `CCShaders.xxx`（包内库，public）。真实案例：Zinner 订阅卡分形纹理直调 `ShaderLibrary.fractalJulia` 迁包后全黑，改 `CCShaders.fractalJulia` 即愈 |
 | 换肤不生效 | configure 必须先于首个视图创建；运行时换主题需触发根视图重建 |
 | sheet 无脏态确认 | 内容视图缺 `@EnvironmentObject var ctx: CCEditSheetContext` 或未挂 `.ccEditSheetDirty` |
 | toast 不显示 | 未 attach 窗口，或场景未 foregroundActive |
