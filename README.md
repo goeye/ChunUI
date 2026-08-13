@@ -6,6 +6,10 @@ ChunUI 是从生产级 iOS 应用 [Zinner（阿奇）](https://zinnerapp.com) �
 
 **你只需要定义自己的配色，就能做出同质感的应用。**
 
+<p>
+  <img src="docs/screenshots/gallery-home.jpg" alt="Gallery" width="135"><img src="docs/screenshots/buttons.jpg" alt="Buttons" width="135"><img src="docs/screenshots/cards-tags.jpg" alt="Cards & Tags" width="135"><img src="docs/screenshots/ai-effects.jpg" alt="AI Effects" width="135"><img src="docs/screenshots/ambient.jpg" alt="Ambient" width="135"><img src="docs/screenshots/shader-zoo.jpg" alt="Shader Zoo" width="135">
+</p>
+
 ```swift
 import ChunUI
 
