@@ -1,0 +1,7 @@
+.DS_Store
+.dd/
+.build/
+.swiftpm/
+xcuserdata/
+.dd-example/
+Example/ChunUIGallery.xcodeproj/xcuserdata/

@@ -1,0 +1,26 @@
+# xcodegen 清单：ChunUI 画廊示例 App（引用父目录本地包）
+name: ChunUIGallery
+options:
+  bundleIdPrefix: com.chunui
+packages:
+  ChunUI:
+    path: ..
+targets:
+  ChunUIGallery:
+    type: application
+    platform: iOS
+    deploymentTarget: "18.6"
+    sources: [App]
+    dependencies:
+      - package: ChunUI
+        product: ChunUIDemo
+    settings:
+      base:
+        GENERATE_INFOPLIST_FILE: YES
+        INFOPLIST_KEY_UILaunchScreen_Generation: YES
+        SWIFT_VERSION: "5.0"
+        SWIFT_DEFAULT_ACTOR_ISOLATION: MainActor
+        SWIFT_APPROACHABLE_CONCURRENCY: YES
+        CODE_SIGN_STYLE: Automatic
+        DEVELOPMENT_TEAM: 6UB6WM6VQR
+        PRODUCT_BUNDLE_IDENTIFIER: com.chunui.gallery

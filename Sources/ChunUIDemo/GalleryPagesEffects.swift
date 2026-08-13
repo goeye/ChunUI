@@ -1,0 +1,298 @@
+/**
+ * [INPUT]: 依赖 ChunUI Feedback/Text/Effects/Ambient/Icons 公开 API
+ * [OUTPUT]: 对外提供 FeedbackPage / SkeletonPage / TextPage / AIEffectsPage / FractalPage / ShaderZooPage / AmbientPage / IconsPage
+ * [POS]: ChunUIDemo 的 Feedback + Text + Effects + Ambient + Icons 分区页
+ * [PROTOCOL]: 变更时更新此头部，然后检查 CLAUDE.md
+ */
+
+import ChunUI
+import SwiftUI
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// MARK: - Feedback
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+struct FeedbackPage: View {
+    var body: some View {
+        GalleryScroll {
+            GallerySection(title: "Toast · CCToastCenter（玻璃胶囊，loading 常驻顶换）") {
+                HStack(spacing: 8) {
+                    CCNeoButton("成功", variant: .secondary, size: .small) { CCToastCenter.shared.show(.success, "已保存") }
+                    CCNeoButton("错误", variant: .secondary, size: .small) { CCToastCenter.shared.show(.error, "网络异常") }
+                    CCNeoButton("加载", variant: .secondary, size: .small) {
+                        CCToastCenter.shared.show(.loading, "上传中…")
+                        try? await Task.sleep(nanoseconds: 1_500_000_000)
+                        CCToastCenter.shared.show(.success, "完成")
+                    }
+                }
+            }
+            GallerySection(title: "沉底 Alert · Twitter 双胶囊（禁 UIAlert）") {
+                CCNeoButton("删除确认", variant: .danger, fullWidth: true) {
+                    AppHelper.shared.showBottomAlert(
+                        title: "删除这条记录？",
+                        message: "删除后不可恢复。",
+                        actions: [CCAlertAction(title: "删除", role: .destructive)]
+                    )
+                }
+            }
+            GallerySection(title: "原生 Sheet · AppHelper.presentSheet") {
+                HStack(spacing: 8) {
+                    CCNeoButton(".form", size: .small) {
+                        AppHelper.shared.presentSheet(.form) { SheetDemoContent(name: ".form 全高") }
+                    }
+                    CCNeoButton(".half", size: .small) {
+                        AppHelper.shared.presentSheet(.half) { SheetDemoContent(name: ".half 半高") }
+                    }
+                    CCNeoButton(".compact", size: .small) {
+                        AppHelper.shared.presentSheet(.compact(280)) { SheetDemoContent(name: ".compact 280pt") }
+                    }
+                }
+            }
+            GallerySection(title: "CCEmptyState · 统一缺省态") {
+                CCEmptyState(kind: .knowledge, message: "这里还什么都没有", compact: true)
+                    .frame(height: 200)
+            }
+        }
+        .navigationTitle("Feedback")
+    }
+}
+
+private struct SheetDemoContent: View {
+    let name: String
+    var body: some View {
+        VStack(spacing: 14) {
+            Text(name).ccText(font: .cc.lgBold, color: .cc.foreground)
+            CCNeoButton("收起", variant: .outline) { AppHelper.shared.dismissSheet() }
+        }
+        .padding(24)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+        .background(Color.cc.background)
+    }
+}
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// MARK: - Skeleton & Shimmer
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+struct SkeletonPage: View {
+    var body: some View {
+        GalleryScroll {
+            GallerySection(title: "CCSkeleton · 骨架编排（镜像真实布局）") {
+                CCSkeleton {
+                    HStack(spacing: 12) {
+                        CCBone(height: 44, circle: true)
+                        VStack(alignment: .leading, spacing: 8) {
+                            CCBone(width: 120, height: 12)
+                            CCBoneText(lines: 2)
+                        }
+                    }
+                }
+            }
+            GallerySection(title: "shimmer · 扫光修饰符") {
+                RoundedRectangle(cornerRadius: 12)
+                    .fill(Color.cc.muted)
+                    .frame(height: 64)
+                    .shimmer()
+            }
+        }
+        .navigationTitle("Skeleton")
+    }
+}
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// MARK: - Text
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+struct TextPage: View {
+    @State private var streamed = ""
+    private let full = "流式文本会带着光标逐字浮现，稳定后光标自动隐藏。"
+
+    var body: some View {
+        GalleryScroll {
+            GallerySection(title: "CCTyperText · 打字机") {
+                CCDesigin.CCTyperText("质感是一种可以携带的资产。")
+            }
+            GallerySection(title: "CCStreamingText · 流式（模拟 AI 输出）") {
+                CCStreamingText(streamed)
+                CCNeoButton("重放流", variant: .outline, size: .small) {
+                    streamed = ""
+                    for ch in full {
+                        streamed.append(ch)
+                        try? await Task.sleep(nanoseconds: 60_000_000)
+                    }
+                }
+            }
+            GallerySection(title: "MarkdownText") {
+                MarkdownText("**加粗** 与 *斜体*，~~删除线~~，`code` 一应俱全。")
+            }
+        }
+        .navigationTitle("Text")
+    }
+}
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// MARK: - AI Effects（Aurora / Generating / Sweep）
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+struct AIEffectsPage: View {
+    @State private var auroraOn = true
+
+    var body: some View {
+        GalleryScroll {
+            GallerySection(title: "CCAuroraLayer · AI 工作态极光（暂停零帧）") {
+                CCAuroraLayer(visible: auroraOn)
+                    .frame(height: 110)
+                    .clipShape(RoundedRectangle(cornerRadius: 14))
+                CCNeoButton(auroraOn ? "熄灭" : "点亮", variant: .outline, size: .small) { auroraOn.toggle() }
+            }
+            GallerySection(title: "CCGeneratingCover · 呼吸点阵 + 对表流光") {
+                CCGeneratingCover()
+                    .frame(height: 140)
+                    .clipShape(RoundedRectangle(cornerRadius: 14))
+            }
+            GallerySection(title: "CCSweepLight · 转场扫光（全屏覆盖窗）") {
+                CCNeoButton("Fire ✦", variant: .primary) { CCSweepLight.fire() }
+            }
+        }
+        .navigationTitle("AI Effects")
+    }
+}
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// MARK: - Fractal Floor（九分形）
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+struct FractalPage: View {
+    private let kinds: [(String, CCFractalFloor.Kind)] = [
+        ("Julia", .julia), ("Newton³", .newton3), ("Mandelbrot", .mandelbrot),
+        ("Burning Ship", .burningShip), ("Tricorn", .tricorn), ("Celtic", .celtic),
+        ("Phoenix", .phoenix), ("Multibrot³", .multibrot3), ("Newton⁴", .newton4),
+    ]
+    @State private var kind: CCFractalFloor.Kind = .mandelbrot
+
+    var body: some View {
+        VStack(spacing: 0) {
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 8) {
+                    ForEach(kinds, id: \.0) { name, k in
+                        Text(name)
+                            .ccText(font: .cc.sm, color: kind == k ? .cc.primaryForeground : .cc.foreground)
+                            .padding(.horizontal, 12).padding(.vertical, 7)
+                            .background(kind == k ? Color.cc.primary : Color.cc.muted, in: Capsule())
+                            .onTapGesture { kind = k }
+                    }
+                }
+                .padding(.cc.base)
+            }
+            CCFractalFloor(edge: .bottom, height: 420, kind: kind)
+                .id(kind)
+                .frame(maxHeight: .infinity, alignment: .bottom)
+        }
+        .background(Color.cc.background)
+        .navigationTitle("Fractal Floor")
+    }
+}
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// MARK: - Shader Zoo
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+struct ShaderZooPage: View {
+    var body: some View {
+        GalleryScroll {
+            GallerySection(title: "MetaBalls · 元球") {
+                MetaBallsBackground()
+                    .frame(height: 140)
+                    .clipShape(RoundedRectangle(cornerRadius: 14))
+            }
+            GallerySection(title: "Silk · 丝绸") {
+                SilkView()
+                    .frame(height: 140)
+                    .clipShape(RoundedRectangle(cornerRadius: 14))
+            }
+            GallerySection(title: "Beams · 光束") {
+                BeamsView()
+                    .frame(height: 140)
+                    .clipShape(RoundedRectangle(cornerRadius: 14))
+            }
+            GallerySection(title: "ColorBends · 颜色弯曲") {
+                ColorBendsView()
+                    .frame(height: 140)
+                    .clipShape(RoundedRectangle(cornerRadius: 14))
+            }
+            GallerySection(title: "RainbowLine · 彩虹线") {
+                RainbowLineView()
+                    .frame(height: 60)
+            }
+        }
+        .navigationTitle("Shader Zoo")
+    }
+}
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// MARK: - Ambient
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+struct AmbientPage: View {
+    var body: some View {
+        GalleryScroll {
+            GallerySection(title: "FluidGradient · 流体渐变") {
+                FluidGradient(
+                    blobs: [.cc.primary, Color(hex: "9000ff"), Color(hex: "00e5ff")],
+                    highlights: [.cc.primary.opacity(0.6)],
+                    speed: 1.0
+                )
+                .frame(height: 140)
+                .clipShape(RoundedRectangle(cornerRadius: 14))
+            }
+            GallerySection(title: "OrbView · 拟物 AI 球") {
+                HStack {
+                    Spacer()
+                    OrbView()
+                        .frame(width: 140, height: 140)
+                    Spacer()
+                }
+            }
+            GallerySection(title: "CCRainbowBar · 彩虹进度") {
+                CCRainbowBar(progress: 0.66)
+            }
+            GallerySection(title: "GridBackground · 网格") {
+                GridBackground()
+                    .frame(height: 120)
+                    .clipShape(RoundedRectangle(cornerRadius: 14))
+            }
+        }
+        .navigationTitle("Ambient")
+    }
+}
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// MARK: - Icons
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+struct IconsPage: View {
+    private let names = [
+        "search-default", "settings-01", "arrow-right", "arrow-left", "plus-default",
+        "chevron-right", "chevron-down", "three-dots-menu-horizontal", "pencil-edit",
+        "delete-dustbin01", "file-default", "file-text", "file-plus", "sparkle-ai01",
+        "user-love-heart", "calendar-default",
+    ]
+
+    var body: some View {
+        GalleryScroll {
+            GallerySection(title: "PikaIcon · 随包 1225 枚模板矢量（示例 16 枚）") {
+                LazyVGrid(columns: [GridItem(.adaptive(minimum: 64))], spacing: 14) {
+                    ForEach(names, id: \.self) { name in
+                        VStack(spacing: 6) {
+                            PikaIcon(name, size: 22, color: .cc.foreground)
+                            Text(name.split(separator: "-").first.map(String.init) ?? name)
+                                .ccText(font: .cc.sm, color: .cc.mutedForeground)
+                                .lineLimit(1)
+                        }
+                    }
+                }
+            }
+        }
+        .navigationTitle("PikaIcon")
+    }
+}
