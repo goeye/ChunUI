@@ -17,7 +17,7 @@ Sources/ChunUI/Extensions/ - 通用系统扩展子集（业务函数已在提取
 Sources/ChunUI/Icons/ - PikaIcon 组件 + PikaIcons.xcassets（1225 枚模板矢量，9.6M）
 Sources/ChunUIDemo/ - 消费者示例 target（GalleryRoot 分区画廊 = 公开 API 面编译测试，被 Example App 消费）
 Example/ - 可运行画廊示例 App（xcodegen project.yml → ChunUIGallery.xcodeproj，引用父目录本地包）
-skills/ - AI Agent Skill（chunui/SKILL.md：混合架构 + 组件用法 + 特效装配 + 设计铁律，支持 Claude Code/Codex/Cursor 安装）
+skills/ - AI Agent Skill（chunui/：SKILL.md 入口铁律 + usage/ 三份用法 + components/reference.md 全组件参考 + examples/ 五个 Zinner 真实生产页面源码作积木图纸）
 </directory>
 
 <config>

@@ -21,7 +21,11 @@ Text("标题").ccText(font: .cc.lgBold, color: .cc.foreground)
 
 ## AI Agent Skill
 
-仓库自带 `skills/chunui/SKILL.md` —— 教 AI 编程助手 ChunUI 的混合架构（UIKit×SwiftUI 窗口分层、命令式 sheet/alert/toast）、全部组件用法、特效动画装配与设计铁律。
+仓库自带 `skills/chunui/` —— 分门别类教 AI 编程助手搭出同级质感：
+- `SKILL.md` 入口：架构一图流 + 质感五铁律 + 常见坑
+- `usage/` 用法三册：接入换肤 / 呈现层（sheet·toast·alert·zoom）/ 特效动效
+- `components/reference.md` 全组件逐类参考
+- `examples/` **五个真实生产页面源码**（个人中心/时间线/收银台/AI 分析卡/tabbar）——积木图纸
 
 **Claude Code**：
 
