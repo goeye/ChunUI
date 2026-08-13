@@ -6,5 +6,6 @@
  */
 import SwiftUI
 
-/// 包内 Metal 库（dynamic member 取函数：CCShaders.aurora(...)）
-nonisolated let CCShaders = ShaderLibrary.bundle(.module)
+/// 包内 Metal 库（dynamic member 取函数：CCShaders.aurora(...)）；公开给宿主——
+/// 宿主自绘用包内 shader（如订阅卡分形纹理）必须经此取函数，禁 ShaderLibrary.default（主 bundle 无 metallib 会黑块）
+nonisolated public let CCShaders = ShaderLibrary.bundle(.module)
