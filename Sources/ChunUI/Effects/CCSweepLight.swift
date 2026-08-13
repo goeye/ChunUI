@@ -15,6 +15,9 @@ import UIKit
 
 @MainActor
 public enum CCSweepLight {
+    /// 主题色化扫光：置为宿主色（宜用明亮变体，如兰花紫），nil = 原版 citrus 虹彩
+    nonisolated(unsafe) public static var tint: Color?
+
     private static var window: UIWindow?
 
     /// 发射一次全屏扫光（进行中重入直接忽略，扫完自动拆窗）
@@ -64,6 +67,7 @@ private struct SweepOverlay: View {
                     ? peakAlpha
                     : max(0, peakAlpha * (1 - (elapsed - sweepDuration) / outroDuration))
 
+                let tintRGB = CCSweepLight.tint?.toRGB() ?? SIMD3<Float>(0, 0, 0)
                 Rectangle()
                     .fill(Color.white)
                     .colorEffect(CCShaders.glimmSweep(
@@ -71,7 +75,9 @@ private struct SweepOverlay: View {
                         .float(Float(elapsed)),
                         .float(Float(progress)),
                         .float(Float(alpha)),
-                        .float(Float(hueShift))
+                        .float(Float(hueShift)),
+                        .float3(tintRGB.x, tintRGB.y, tintRGB.z),
+                        .float(CCSweepLight.tint == nil ? 0 : 0.85)
                     ))
             }
         }

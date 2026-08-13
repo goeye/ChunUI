@@ -33,7 +33,8 @@ static inline float3 glimmPal(float t) {
 
 [[ stitchable ]] half4 glimmSweep(float2 position, half4 color,
                                   float2 res, float time, float progress,
-                                  float alpha, float hueShift) {
+                                  float alpha, float hueShift,
+                                  float3 tint, float tintMix) {
     float2 uv = position / res;
     float axis  = uv.y;          // 纵向：自上而下扫过（SwiftUI y 向下增长，progress 0→1 即 顶→底）
     float cross = uv.x;          // 波动沿横向展开
@@ -67,6 +68,9 @@ static inline float3 glimmPal(float t) {
             + axis * 1.4 + cross * 0.35
             + hueShift + time * 0.04;
     float3 col = glimmPal(t) * kBrightness;
+    // 主题化：保留亮度起伏（虹彩/波带结构），色度整体换到宿主色轴
+    float luma = dot(col, float3(0.299, 0.587, 0.114));
+    col = mix(col, tint * (luma * 1.7), tintMix);
 
     // 固定主光 + 正视相机：稳定的峰顶高光
     float3 V = float3(0.0, 0.0, 1.0);

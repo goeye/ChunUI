@@ -22,6 +22,11 @@ public struct CCRainbowBar: View {
         self.height = height
     }
 
+    /// 主题化谱带覆写：宿主可整组换色（如品牌同轴单色系彩带），nil = 内置 12 色
+    nonisolated(unsafe) public static var spectrumOverride: [Color]?
+
+    private var activeSpectrum: [Color] { Self.spectrumOverride ?? Self.spectrum }
+
     /// 潘通式精选 12 色（Laper 口径：每族最亮档、按色相升序围环、已踢暗紫防浊）
     private static let spectrum: [Color] = [
         Color(hex: "E53935"), Color(hex: "E65100"), Color(hex: "F4A300"),
@@ -75,7 +80,7 @@ public struct CCRainbowBar: View {
     private func ribbon(width: CGFloat, phase: CGFloat) -> some View {
         let tiles = max(1, Int(ceil(width / ribbonPeriod)) + 1)
         return LinearGradient(
-            stops: Self.tiledStops(colors: Self.spectrum, tiles: tiles),
+            stops: Self.tiledStops(colors: activeSpectrum, tiles: tiles),
             startPoint: .leading, endPoint: .trailing
         )
         .frame(width: CGFloat(tiles) * ribbonPeriod)
