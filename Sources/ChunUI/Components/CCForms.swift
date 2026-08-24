@@ -32,9 +32,9 @@ private enum FormTokens {
     static let textareaHeight: CGFloat = 112
 
     // 开关
-    static let toggleWidth: CGFloat = 44
-    static let toggleHeight: CGFloat = 24
-    static let toggleKnobSize: CGFloat = 20
+    // Kumo Switch lg 档几何：轨道 40×20，滑块 = 满高正方，开启位移 = 宽 − 高
+    static let toggleWidth: CGFloat = 40
+    static let toggleHeight: CGFloat = 20
 
     // 复选框
     static let checkboxSize: CGFloat = 16
@@ -193,14 +193,13 @@ public extension CCDesigin {
 }
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-// MARK: - CCToggle 开关组件 (Figma)
+// MARK: - CCToggle 开关组件（Cloudflare Kumo Switch 形制，Laper LaperToggle 同构）
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 public extension CCDesigin {
-    /// 自定义开关
-    /// - 尺寸: 44x24
-    /// - 开启: 粉色胶囊背景
-    /// - 滑块: 20x20 白色圆形 + 阴影
+    /// Kumo Switch：扁 squircle 轨道（40×20）+ 满高正方滑块 + 1px ring，150ms ease-out 滑动
+    /// 开 = primary 底 + 深一线 ring（混 10% 黑，与强调钮同一条配方）；关 = sidebarAccent 底 + border ring
+    /// 滑块恒 background 白，双层阴影（边缘一圈 + 下沉）；颜色只认设计系统 token
     struct CCToggle: View {
         @Binding var isOn: Bool
         var isDisabled: Bool = false
@@ -210,29 +209,48 @@ public extension CCDesigin {
             self.isDisabled = isDisabled
         }
 
+        private var trackW: CGFloat { FormTokens.toggleWidth }
+        private var trackH: CGFloat { FormTokens.toggleHeight }
+        /// squircle：连续曲率圆角（Kumo corner-shape: squircle 的 SwiftUI 等价）
+        private var corner: CGFloat { trackH * 0.45 }
+
         public var body: some View {
             SwiftUI.Button {
                 guard !isDisabled else { return }
-                withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                AppHelper.shared.mada(.light)
+                withAnimation(.easeOut(duration: 0.15)) {
                     isOn.toggle()
                 }
             } label: {
-                ZStack(alignment: isOn ? .trailing : .leading) {
-                    // 背景胶囊
-                    Capsule()
-                        .fill(isOn ? Color.cc.primary : Color.cc.primary.opacity(0.3))
-                        .frame(width: FormTokens.toggleWidth, height: FormTokens.toggleHeight)
+                ZStack(alignment: .leading) {
+                    // 轨道：扁平纯色 + 1px ring（开启态 ring 比底色深一线）
+                    RoundedRectangle(cornerRadius: corner, style: .continuous)
+                        .fill(isOn ? Color.cc.primary : Color.cc.sidebarAccent)
+                        .overlay {
+                            RoundedRectangle(cornerRadius: corner, style: .continuous)
+                                .strokeBorder(
+                                    isOn ? Color.cc.primary.mix(with: .black, amount: 0.10) : Color.cc.border,
+                                    lineWidth: 1
+                                )
+                        }
+                        .frame(width: trackW, height: trackH)
 
-                    // 滑块
-                    Circle()
-                        .fill(Color.white)
-                        .frame(width: FormTokens.toggleKnobSize, height: FormTokens.toggleKnobSize)
-                        .shadow(color: .black.opacity(0.15), radius: 2, x: 0, y: 1)
-                        .padding(2)
+                    // 滑块：满高正方，双层阴影（0 0 1 0.5 边缘圈 + 0 1 2 下沉）
+                    RoundedRectangle(cornerRadius: corner, style: .continuous)
+                        .fill(Color.cc.background)
+                        .frame(width: trackH, height: trackH)
+                        .shadow(color: .black.opacity(0.12), radius: 0.5, x: 0, y: 0)
+                        .shadow(color: .black.opacity(0.08), radius: 1, x: 0, y: 1)
+                        .offset(x: isOn ? trackW - trackH : 0)
                 }
+                // 触控热区补足 44pt，视觉不变
+                .frame(minWidth: 44, minHeight: 44)
+                .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
             .opacity(isDisabled ? 0.5 : 1)
+            .animation(.easeOut(duration: 0.15), value: isOn)
+            .accessibilityAddTraits(.isToggle)
         }
     }
 }

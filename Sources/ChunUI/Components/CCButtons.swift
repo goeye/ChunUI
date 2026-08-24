@@ -12,7 +12,7 @@
  *   CCDesigin.Button("文字", icon: nil, size: .large/.medium/.small, variant: .primary/.secondary, enable: true) { }
  *
  * 设计规范 (Figma 精准复刻):
- * 1. Primary: 霓虹粉玻璃质感 - 8层内阴影叠加 (primary 色 #ff00c8)
+ * 1. Primary: Kumo 受光质感——1px 深一线 ring + 受光渐变 + 顶部 1px 内高光 + shadow-xs（Laper 强调钮同构）
  * 2. Secondary: 柔和微拟物 (斜向渐变 + 简单内高光)
  * 3. 交互: 按下 scale(0.97)
  * 4. iOS 26+: Secondary 使用 Liquid Glass
@@ -27,97 +27,51 @@ import SwiftUI
 // MARK: - 霓虹粉玻璃按钮样式 (Primary)
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-/// 霓虹粉玻璃按钮样式 - ZStack 多层叠加
-/// 粉色底、白字、基于 primary 色推算高光阴影
+/// 有色强调钮质感（Cloudflare Kumo 配方，Laper Button 同构）：
+/// ring = 主色混 10% 黑的 1px 描边（比底色深一线）· 受光 = 主色混 15% 白 → 主色 自上而下渐变
+/// 顶部 1px 内高光 = 主色混 30% 白 · 阴影只留 shadow-xs——立体感来自受光，不靠光晕
 public struct PinkGlassButtonStyle: ViewModifier {
     let enable: Bool
 
-    /// 按钮主色 - 使用设计系统的 primary (霓虹粉 #ff00c8)
-    private var buttonColor: Color { .cc.primary }
+    /// 按钮主色 - 设计系统 primary（Kumo 配方颜色全由 token 推算，本层不持有色值）
+    private var token: Color { .cc.primary }
+
+    private var ring: Color { token.mix(with: .black, amount: 0.10) }
+    private var insetHighlight: Color { token.mix(with: .white, amount: 0.30) }
+    private var lightFrom: Color { token.mix(with: .white, amount: 0.15) }
 
     public func body(content: Content) -> some View {
         content
-            .background(backgroundLayer)
+            .background {
+                // 受光渐变（EmphasisEffect：from 15% 白 → token）
+                LinearGradient(
+                    colors: [lightFrom, token],
+                    startPoint: .top, endPoint: .bottom
+                )
+            }
             .clipShape(Capsule())
-            .overlay(innerShadowLayers)
-            .overlay(borderLayer)
-            .shadow(color: buttonColor.opacity(enable ? 0.4 : 0), radius: 8, x: 0, y: 4)
+            .overlay {
+                // inset 0 1 0 顶部内高光：一线 30% 白，只在上缘显影
+                Capsule()
+                    .inset(by: 1)
+                    .strokeBorder(insetHighlight, lineWidth: 1)
+                    .mask {
+                        LinearGradient(
+                            stops: [
+                                .init(color: .white, location: 0),
+                                .init(color: .clear, location: 0.38),
+                            ],
+                            startPoint: .top, endPoint: .bottom
+                        )
+                    }
+            }
+            .overlay {
+                // 1px ring：深一线描边收住轮廓
+                Capsule().strokeBorder(ring, lineWidth: 1)
+            }
+            // shadow-xs（Kumo：强调钮零光晕）
+            .shadow(color: .black.opacity(enable ? 0.06 : 0), radius: 1.5, y: 1)
             .opacity(enable ? 1 : 0.5)
-    }
-
-    // ━━━ Layer 1: 背景渐变 (基于 foreground 色) ━━━
-    private var backgroundLayer: some View {
-        LinearGradient(
-            stops: [
-                .init(color: buttonColor.mix(with: .white, amount: 0.15), location: 0),
-                .init(color: buttonColor, location: 0.5),
-                .init(color: buttonColor.mix(with: .black, amount: 0.15), location: 1)
-            ],
-            startPoint: .top,
-            endPoint: .bottom
-        )
-    }
-
-    // ━━━ Layer 2: 边框 ━━━
-    private var borderLayer: some View {
-        Capsule()
-            .stroke(buttonColor.mix(with: .black, amount: 0.2), lineWidth: 0.5)
-    }
-
-    // ━━━ Layer 3-8: 多层内阴影叠加 ━━━
-    private var innerShadowLayers: some View {
-        ZStack {
-            // Layer 3: 内边缘暗色轮廓
-            Capsule()
-                .stroke(buttonColor.mix(with: .black, amount: 0.3), lineWidth: 1)
-                .blur(radius: 0.5)
-                .clipShape(Capsule())
-
-            // Layer 4: 顶部高光条
-            Capsule()
-                .stroke(
-                    LinearGradient(
-                        colors: [Color.white.opacity(0.6), Color.white.opacity(0.2), Color.clear],
-                        startPoint: .top,
-                        endPoint: .center
-                    ),
-                    lineWidth: 1.5
-                )
-                .blur(radius: 0.5)
-                .clipShape(Capsule())
-
-            // Layer 5: 整体内阴影
-            Capsule()
-                .stroke(buttonColor.mix(with: .black, amount: 0.25), lineWidth: 2)
-                .blur(radius: 2)
-                .clipShape(Capsule())
-
-            // Layer 6: 底部暗边
-            Capsule()
-                .stroke(
-                    LinearGradient(
-                        colors: [Color.clear, Color.clear, Color.black.opacity(0.2)],
-                        startPoint: .top,
-                        endPoint: .bottom
-                    ),
-                    lineWidth: 2
-                )
-                .blur(radius: 1)
-                .clipShape(Capsule())
-
-            // Layer 7: 底部冷色反光
-            Capsule()
-                .stroke(
-                    LinearGradient(
-                        colors: [Color.clear, Color.clear, buttonColor.mix(with: .white, amount: 0.3).opacity(0.4)],
-                        startPoint: .top,
-                        endPoint: .bottom
-                    ),
-                    lineWidth: 1.5
-                )
-                .blur(radius: 1.5)
-                .clipShape(Capsule())
-        }
     }
 }
 

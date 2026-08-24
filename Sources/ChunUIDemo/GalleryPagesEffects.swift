@@ -15,7 +15,7 @@ import SwiftUI
 struct FeedbackPage: View {
     var body: some View {
         GalleryScroll {
-            GallerySection(title: "Toast · CCToastCenter（玻璃胶囊，loading 常驻顶换）") {
+            GallerySection(title: "Toast · Kumo 叠放（旧张退身后成叠，点整叠展开）") {
                 HStack(spacing: 8) {
                     CCNeoButton("成功", variant: .secondary, size: .small) { CCToastCenter.shared.show(.success, "已保存") }
                     CCNeoButton("错误", variant: .secondary, size: .small) { CCToastCenter.shared.show(.error, "网络异常") }
@@ -23,6 +23,13 @@ struct FeedbackPage: View {
                         CCToastCenter.shared.show(.loading, "上传中…")
                         try? await Task.sleep(nanoseconds: 1_500_000_000)
                         CCToastCenter.shared.show(.success, "完成")
+                    }
+                    CCNeoButton("连发", variant: .secondary, size: .small) {
+                        CCToastCenter.shared.show(.success, "第一张：已保存")
+                        try? await Task.sleep(nanoseconds: 600_000_000)
+                        CCToastCenter.shared.show(.info, "第二张：正在同步到云端")
+                        try? await Task.sleep(nanoseconds: 600_000_000)
+                        CCToastCenter.shared.show(.warning, "第三张：网络波动，已自动重试")
                     }
                 }
             }
@@ -149,6 +156,21 @@ struct AIEffectsPage: View {
                 CCGeneratingCover()
                     .frame(height: 140)
                     .clipShape(RoundedRectangle(cornerRadius: 14))
+            }
+            GallerySection(title: "CCGradientWavesView · 发言涟漪（MTKView 海面，speech 抖动）") {
+                SpeechWavesDemo()
+            }
+            GallerySection(title: "CCSpeechBubbleShape · 一体尖尾气泡（Laper tooltip 法）") {
+                Text("尾巴与气泡是一条闭合路径")
+                    .ccText(font: .cc.smBold, color: .cc.foreground)
+                    .padding(.horizontal, 18)
+                    .padding(.top, 12)
+                    .padding(.bottom, 12 + CCSpeechBubbleShape.tailHeight)
+                    .background {
+                        CCSpeechBubbleShape()
+                            .fill(Color.cc.card)
+                            .stroke(Color.cc.border, lineWidth: 1)
+                    }
             }
             GallerySection(title: "CCSweepLight · 转场扫光（全屏覆盖窗）") {
                 CCNeoButton("Fire ✦", variant: .primary) { CCSweepLight.fire() }
@@ -294,5 +316,25 @@ struct IconsPage: View {
             }
         }
         .navigationTitle("PikaIcon")
+    }
+}
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// MARK: - 涟漪演示（speech 开关驱动能量包络）
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+private struct SpeechWavesDemo: View {
+    @State private var speaking = false
+
+    var body: some View {
+        ZStack(alignment: .bottom) {
+            CCGradientWavesView(speech: speaking ? 1 : 0)
+                .frame(height: 180)
+                .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+            CCNeoButton(speaking ? "停止发言" : "模拟发言", variant: .secondary, size: .small) {
+                speaking.toggle()
+            }
+            .padding(.bottom, 10)
+        }
     }
 }
