@@ -172,6 +172,10 @@ struct AIEffectsPage: View {
                             .stroke(Color.cc.border, lineWidth: 1)
                     }
             }
+            GallerySection(title: "CCParticleText · 粒子聚字（拖动斥开）") {
+                CCParticleText("$200,000,000", fontSize: 44)
+                    .frame(height: 150)
+            }
             GallerySection(title: "CCSplitFlapText · 机场翻牌板") {
                 VStack(spacing: 16) {
                     CCSplitFlapText(phrases: ["$20,000,000+"], fontSize: 22, flipsPerChar: 9, charset: "0123456789")
