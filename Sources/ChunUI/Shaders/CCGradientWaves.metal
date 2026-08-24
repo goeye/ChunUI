@@ -75,11 +75,11 @@ fragment half4 ccGradientWavesFragment(WaveVertexOut in [[stage_in]],
     float E = clamp(u.energy, 0.0, 1.0);
     // 能量调制（原 SwiftUI 侧的参数曲线收拢进片元，单一真相）
     float uSpeed = 0.4 + 0.5 * E;
-    float uAmplitude = 2.5 + 1.5 * E;
+    float uAmplitude = 3.4 + 1.2 * E;
     float uWaveScale = 0.55;
     float uWaveRatio = 0.9;
     float uSwell = 35.0 + 18.0 * E;
-    float uTurbulence = 20.0 + 26.0 * E;
+    float uTurbulence = 24.0 + 22.0 * E;
     float uTilt = 1.11 + 0.08 * E;
     float uZoom = 1.05;
     float uHeight = 5.5;
@@ -119,11 +119,16 @@ fragment half4 ccGradientWavesFragment(WaveVertexOut in [[stage_in]],
     float3 pos = cam + dist * dir;
 
     float t = clamp(uFogDepth / max(dist, 0.001), 0.0, 1.0);
-    float3 body = mix(u.wave.xyz, u.crest.xyz, clamp(pos.z * 0.08 + 0.5, 0.0, 1.0));
-    float3 col = mix(u.horizon.xyz, body, t);
+    // 以浪心为轴展开色带：波谷=wave 波峰=crest，层次全幅拉开
+    float3 body = mix(u.wave.xyz, u.crest.xyz, clamp((pos.z - uHeight) * 0.28 + 0.5, 0.0, 1.0));
+    // horizon→body 过渡走 smoothstep：远景压 horizon、近景全 body，层级分明
+    float3 col = mix(u.horizon.xyz, body, smoothstep(0.10, 0.80, t));
     col = clamp(col * uBrightness, 0.0, 1.0);
 
     float alpha = t * uOpacity;
+    // 只占屏顶 1/3：0.24 处开始收，1/3 前干净归零
+    float ny = in.position.y / max(u.resolution.y, 1.0);
+    alpha *= 1.0 - smoothstep(0.24, 0.34, ny);
     float g = hash21(in.position.xy + fmod(u.time, 64.0) * 11.0);
     alpha += (g - 0.5) * uGrain;
     alpha = clamp(alpha, 0.0, 1.0);
