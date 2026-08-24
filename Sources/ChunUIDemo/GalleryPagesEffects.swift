@@ -173,7 +173,7 @@ struct AIEffectsPage: View {
                     }
             }
             GallerySection(title: "CCCardSwap · centered 居中翻动") {
-                CCCardSwap(count: 5, style: .centered, cardSize: CGSize(width: 240, height: 130), verticalDistance: 12, delay: 1.0) { index in
+                CCCardSwap(count: 5, style: .centered, cardSize: CGSize(width: 240, height: 130), verticalDistance: 12, delay: 1.0, flyInIntro: true) { index in
                     RoundedRectangle(cornerRadius: 16, style: .continuous)
                         .fill(Color.cc.card)
                         .overlay { RoundedRectangle(cornerRadius: 16, style: .continuous).strokeBorder(Color.cc.border, lineWidth: 1) }
