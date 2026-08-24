@@ -23,7 +23,7 @@ public struct CCGradientWavesView: View {
             energyTarget: reduceMotion ? 0 : Float(speech),
             paused: reduceMotion,
             // 三层拉满对比：horizon 压深（混黑 25%）/ wave 主色提纯（混白 30%）/ crest 纯白；混背景淡化 = 隐身，禁回退
-            horizon: rgba(Color.cc.primary.mix(with: .black, amount: 0.25)),
+            horizon: rgba(Color.cc.primary.mix(with: .black, amount: 0.15)),
             wave: rgba(Color.cc.primary.mix(with: .white, amount: 0.30)),
             crest: rgba(.white)
         )

@@ -94,8 +94,10 @@ fragment half4 ccGradientWavesFragment(WaveVertexOut in [[stage_in]],
 
     float vfov = (3.14159 / 2.3) / max(uZoom, 0.05);
     float3 cam = float3(0.0, 0.0, 30.0);
-    float2 uv = (in.position.xy / max(u.resolution, float2(1.0))) - 0.5;
-    uv.x *= u.resolution.x / max(u.resolution.y, 1.0);
+    // 视口压缩：以 34% 屏高为虚拟画布——完整的上→下构图整体压进顶 1/3，不裁剪不改向
+    float2 vres = float2(u.resolution.x, u.resolution.y * 0.34);
+    float2 uv = (in.position.xy / max(vres, float2(1.0))) - 0.5;
+    uv.x *= vres.x / max(vres.y, 1.0);
     // 倒挂：海面挂在屏幕上方
     uv.y = -uv.y;
     // 发言微抖：能量驱动的相机抖动（原 view offset 抖动收进管线）
@@ -126,9 +128,9 @@ fragment half4 ccGradientWavesFragment(WaveVertexOut in [[stage_in]],
     col = clamp(col * uBrightness, 0.0, 1.0);
 
     float alpha = t * uOpacity;
-    // 只占屏顶 1/3：0.24 处开始收，1/3 前干净归零
+    // 收尾保险：压缩视口自身雾衰减已近零，只在 1/3 交界再兜一层干净收零
     float ny = in.position.y / max(u.resolution.y, 1.0);
-    alpha *= 1.0 - smoothstep(0.24, 0.34, ny);
+    alpha *= 1.0 - smoothstep(0.30, 0.36, ny);
     float g = hash21(in.position.xy + fmod(u.time, 64.0) * 11.0);
     alpha += (g - 0.5) * uGrain;
     alpha = clamp(alpha, 0.0, 1.0);

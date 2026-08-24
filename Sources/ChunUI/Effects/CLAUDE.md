@@ -17,6 +17,6 @@ ColorBendsView.swift: 颜色弯曲
 RandomNoiseShader.swift: 随机噪声
 RainbowLineView.swift: 彩虹线条
 AurorabackGround.swift: 极光背景（旧版氛围层）
-CCGradientWavesView.swift: 倒挂涟漪氛围层（MTKView 真管线 30fps 透明混合；speech 0…1 能量经渲染器攻快 0.5/衰慢 0.1 包络平滑；配色三层拉满对比 horizon=primary 混黑 25%/wave=混白 30%/crest=纯白，**禁混背景淡化——那是隐身元凶**；Reduce Motion 暂停；管线装配失败 DEBUG 报错不静默）
+CCGradientWavesView.swift: 倒挂涟漪氛围层（MTKView 真管线 30fps 透明混合；speech 0…1 能量经渲染器攻快 0.5/衰慢 0.1 包络平滑；配色三层拉满对比 horizon=primary 混黑 15%/wave=混白 30%/crest=纯白，**禁混背景淡化——那是隐身元凶**；Reduce Motion 暂停；管线装配失败 DEBUG 报错不静默）
 
 [PROTOCOL]: 变更时更新此头部，然后检查 CLAUDE.md
