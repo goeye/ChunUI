@@ -26,7 +26,7 @@ struct WaveUniforms {
     float4 horizon;      // 远景色 rgb
     float4 wave;         // 浪身色 rgb
     float4 crest;        // 浪尖色 rgb
-    float4 params;       // opacity, brightness, hangFadeStart, hangFadeEnd
+    float4 params;       // opacity, brightness, 备用×2
 };
 
 static float hash21(float2 p) {
@@ -46,7 +46,8 @@ static float plasma(float3 r, float2 freq, float4 tc, float amplitude, float swe
 static float raymarch(float3 pos, float3 dir, float2 freq, float4 tc,
                       float amplitude, float swell, float turbulence, float height) {
     float dist = 0.0;
-    for (int i = 0; i < 40; i++) {
+    for (int i = 0; i < 128; i++) {
+        if (float(i) >= 70.0) break;   // 原版 medium 步进；40 步浪形糊成雾
         float dscene = plasma(pos + dist * dir, freq, tc, amplitude, swell, turbulence, height);
         if (abs(dscene) < 0.1) break;
         dist += 0.9 * dscene;
@@ -73,16 +74,16 @@ fragment half4 ccGradientWavesFragment(WaveVertexOut in [[stage_in]],
                                      constant WaveUniforms &u [[buffer(0)]]) {
     float E = clamp(u.energy, 0.0, 1.0);
     // 能量调制（原 SwiftUI 侧的参数曲线收拢进片元，单一真相）
-    float uSpeed = 0.32 + 0.55 * E;
-    float uAmplitude = 2.2 + 1.6 * E;
+    float uSpeed = 0.4 + 0.5 * E;
+    float uAmplitude = 2.5 + 1.5 * E;
     float uWaveScale = 0.55;
     float uWaveRatio = 0.9;
-    float uSwell = 28.0 + 20.0 * E;
-    float uTurbulence = 16.0 + 28.0 * E;
+    float uSwell = 35.0 + 18.0 * E;
+    float uTurbulence = 20.0 + 26.0 * E;
     float uTilt = 1.11 + 0.08 * E;
     float uZoom = 1.05;
-    float uHeight = 5.2;
-    float uFogDepth = 14.0;
+    float uHeight = 5.5;
+    float uFogDepth = 15.0;
     float uBrightness = u.params.y + 0.12 * E;
     float uOpacity = u.params.x + 0.12 * E;
     float uGrain = 0.04 + 0.07 * E;
@@ -112,7 +113,7 @@ fragment half4 ccGradientWavesFragment(WaveVertexOut in [[stage_in]],
     dir = float3x3(float3(c, -s, 0.0), float3(s, c, 0.0), float3(0.0, 0.0, 1.0)) * dir;
     c = cos(uTilt);
     s = sin(uTilt);
-    dir = float3x3(float3(c, 0.0, -s), float3(0.0, 1.0, 0.0), float3(s, 0.0, c)) * dir;
+    dir = float3x3(float3(c, 0.0, s), float3(0.0, 1.0, 0.0), float3(-s, 0.0, c)) * dir;
 
     float dist = raymarch(cam, dir, freq, tc, uAmplitude, uSwell, uTurbulence, uHeight);
     float3 pos = cam + dist * dir;
@@ -123,8 +124,6 @@ fragment half4 ccGradientWavesFragment(WaveVertexOut in [[stage_in]],
     col = clamp(col * uBrightness, 0.0, 1.0);
 
     float alpha = t * uOpacity;
-    float ny = in.position.y / max(u.resolution.y, 1.0);
-    alpha *= 1.0 - smoothstep(u.params.z, u.params.w, ny);
     float g = hash21(in.position.xy + fmod(u.time, 64.0) * 11.0);
     alpha += (g - 0.5) * uGrain;
     alpha = clamp(alpha, 0.0, 1.0);

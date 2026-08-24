@@ -22,9 +22,10 @@ public struct CCGradientWavesView: View {
         WaveMetalView(
             energyTarget: reduceMotion ? 0 : Float(speech),
             paused: reduceMotion,
-            horizon: rgba(Color.cc.primary.mix(with: Color.cc.background, amount: 0.62)),
-            wave: rgba(Color.cc.primary.mix(with: .white, amount: 0.35)),
-            crest: rgba(Color.cc.primary.mix(with: .white, amount: 0.78))
+            // React Bits 原版级饱和（#5227FF/#FF9FFC/#FFF 的主题轴映射）；混背景淡化 = 隐身，禁回退
+            horizon: rgba(Color.cc.primary),
+            wave: rgba(Color.cc.primary.mix(with: .white, amount: 0.55)),
+            crest: rgba(.white)
         )
         .allowsHitTesting(false)
         .accessibilityHidden(true)
@@ -83,7 +84,7 @@ private final class WaveRenderer: NSObject, MTKViewDelegate {
         var horizon: SIMD4<Float>
         var wave: SIMD4<Float>
         var crest: SIMD4<Float>
-        var params: SIMD4<Float>   // opacity, brightness, hangFadeStart, hangFadeEnd
+        var params: SIMD4<Float>   // opacity, brightness, 备用×2
     }
 
     var energyTarget: Float = 0
@@ -148,7 +149,7 @@ private final class WaveRenderer: NSObject, MTKViewDelegate {
             horizon: colors.horizon,
             wave: colors.wave,
             crest: colors.crest,
-            params: SIMD4(0.55, 1.0, 0.22, 0.78)
+            params: SIMD4(1.0, 1.0, 0, 0)
         )
         encoder.setRenderPipelineState(pipeline)
         encoder.setFragmentBytes(&uniforms, length: MemoryLayout<WaveUniforms>.stride, index: 0)
