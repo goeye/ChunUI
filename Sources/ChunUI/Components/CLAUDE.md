@@ -21,6 +21,7 @@ CCBottomAlert.swift: 沉底双胶囊 Alert（CCAlertCenter + CCAlertWindow 置�
 CCToast.swift: Kumo 叠放 toast（CCToastCenter 多张栈：结果顶换 loading/展开冻结倒计时；CCToastView 叠放编舞：最新在前、旧张缩 0.1 上探 12pt 对齐前张尺寸正文淡出、点整叠展开成列表、限 3 张可见、曲线 cubic-bezier(0.22,1,0.36,1)；卡片 = 状态色圆徽 + 正文 + 关闭钮进度环[冻结同暂停] + 图标色 3.33s 渐变；CCToastWindow 触摸只在叠层命中区 capsuleHitRect/气泡态接管）+ CCAqiBubbleToast + CCKeyboardWatcher
 CCUploadToast.swift: 上传进度胶囊（UploadProgressCenter 字节级进度）
 CCAqiBubbleTail.swift: 气泡几何原子——AqiBubbleTail 右下尖尾 + CCSpeechBubbleShape（Laper tooltip 法：气泡与底部中央尖尾一条闭合路径，两肋凹弯 + 圆尖，fill/stroke 连续无接缝）
+CCSplitFlapText.swift: 机场翻牌板（React Bits SplitFlapText 移植：暗瓦上下半分体 + 前翻折下/后翻落定两相 3D 翻页 + 中缝铰链；随机字符序列错拍翻入落定目标，可多词循环；Reduce Motion 直落）
 CCSkeleton.swift: Kumo SkeletonLine 骨架屏（CCBone 每条自带独立扫光：随机时长 1.3–1.7s + 随机相位[负延迟等价]、前景 8% ease-in-out 高光，整片不同步闪；CCBoneText 行宽各自随机末行更短；CCSkeleton 语义容器）
 CCCardDeck.swift: Tinder 式无限轮转卡组容器
 CCChipFlow.swift: 换行流布局 Layout
