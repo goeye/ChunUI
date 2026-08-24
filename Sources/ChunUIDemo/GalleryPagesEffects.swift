@@ -172,6 +172,21 @@ struct AIEffectsPage: View {
                             .stroke(Color.cc.border, lineWidth: 1)
                     }
             }
+            GallerySection(title: "CCCardSwap · 3D 卡堆轮换（1 秒一页）") {
+                CCCardSwap(count: 6, cardSize: CGSize(width: 210, height: 120), delay: 1.0) { index in
+                    RoundedRectangle(cornerRadius: 14, style: .continuous)
+                        .fill(Color.cc.foreground)
+                        .overlay {
+                            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                                .strokeBorder(.white.opacity(0.35), lineWidth: 1)
+                        }
+                        .overlay {
+                            Text("Card \(index + 1)")
+                                .ccText(font: .cc.lgBold, color: .cc.background)
+                        }
+                }
+                .frame(maxWidth: .infinity)
+            }
             GallerySection(title: "CCParticleText · 粒子聚字（拖动斥开）") {
                 CCParticleText("$200,000,000", fontSize: 44)
                     .frame(height: 150)
