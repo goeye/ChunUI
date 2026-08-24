@@ -172,6 +172,16 @@ struct AIEffectsPage: View {
                             .stroke(Color.cc.border, lineWidth: 1)
                     }
             }
+            GallerySection(title: "CCCardSwap · centered 居中翻动") {
+                CCCardSwap(count: 5, style: .centered, cardSize: CGSize(width: 240, height: 130), verticalDistance: 12, delay: 1.0) { index in
+                    RoundedRectangle(cornerRadius: 16, style: .continuous)
+                        .fill(Color.cc.card)
+                        .overlay { RoundedRectangle(cornerRadius: 16, style: .continuous).strokeBorder(Color.cc.border, lineWidth: 1) }
+                        .overlay { Text("Card \(index + 1)").ccText(font: .cc.lgBold, color: .cc.foreground) }
+                        .shadow(color: .black.opacity(0.08), radius: 10, y: 5)
+                }
+                .frame(maxWidth: .infinity)
+            }
             GallerySection(title: "CCCardSwap · 3D 卡堆轮换（1 秒一页）") {
                 CCCardSwap(count: 6, cardSize: CGSize(width: 210, height: 120), delay: 1.0) { index in
                     RoundedRectangle(cornerRadius: 14, style: .continuous)

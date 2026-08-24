@@ -17,7 +17,7 @@ ColorBendsView.swift: 颜色弯曲
 RandomNoiseShader.swift: 随机噪声
 RainbowLineView.swift: 彩虹线条
 AurorabackGround.swift: 极光背景（旧版氛围层）
-CCCardSwap.swift: 3D 卡堆轮换（React Bits CardSwap 移植：槽位 x/y 阶梯 + z 纵深缩放模拟 perspective 900 + 整堆 projectionEffect 斜切；每拍前卡坠出→群卡弹簧上位→前卡沉底归尾；任意张数只渲染前 visibleDepth 深度；Reduce Motion 静止）
+CCCardSwap.swift: 卡堆轮换（React Bits CardSwap 移植）双形态——diagonal 斜置 3D（x/y 阶梯 + z 纵深缩放 + 斜切）/ centered 居中同心叠（后卡每层缩 5% 上探微探头，零透视零横移，占位仅本尺寸不撑版面）；每拍前卡坠出→群卡弹簧上位→前卡沉底归尾；任意张数只渲染前 visibleDepth 深度；Reduce Motion 静止
 CCParticleText.swift: 粒子聚字（React Bits ParticleText 移植：灰度位图采样字形 → 散开 easeOutCubic 错拍聚合 → 呼吸漂浮 + 拖动斥力；调色板 12 桶批量 Path 填充禁逐粒 fill；Reduce Motion 直落）
 CCGradientWavesView.swift: 倒挂涟漪氛围层（MTKView 真管线 30fps 透明混合；speech 0…1 能量经渲染器攻快 0.5/衰慢 0.1 包络平滑；配色三层拉满对比 horizon=primary 混黑 15%/wave=混白 30%/crest=纯白，**禁混背景淡化——那是隐身元凶**；Reduce Motion 暂停；管线装配失败 DEBUG 报错不静默）
 

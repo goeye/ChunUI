@@ -5,7 +5,7 @@
 
 /**
  * [INPUT]: 依赖 SwiftUI 弹簧动画 + projectionEffect 斜切、Reduce Motion；形制移植 React Bits CardSwap（3D 牌堆：前卡坠落 → 群卡上位 → 前卡归尾，循环翻页）
- * [OUTPUT]: 对外提供 CCCardSwap——斜置 3D 卡片轮换堆（槽位 x/y 阶梯 + z 纵深缩放模拟 perspective；任意张数，只渲染前 visibleDepth 深度保性能）
+ * [OUTPUT]: 对外提供 CCCardSwap——卡片轮换堆，双形态：diagonal 斜置 3D（槽位 x/y 阶梯 + z 纵深缩放 + 斜切）/ centered 居中同心叠（后卡缩阶微探头，零透视零横移，不撑版面）；任意张数只渲染前 visibleDepth 深度保性能
  * [POS]: Effects 的卡堆展示原语，宿主 Onboarding toolsShow 等消费；Reduce Motion 静止牌堆
  * [PROTOCOL]: 变更时更新此头部，然后检查 CLAUDE.md
  */
@@ -16,8 +16,15 @@ import SwiftUI
 // MARK: - CCCardSwap（每拍：前卡坠出 → 其余各进一槽 → 前卡从纵深归尾）
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
+/// 堆叠形态：diagonal = React Bits 原版斜置 3D；centered = 居中同心叠（无斜切无横移）
+public enum CCCardSwapStyle {
+    case diagonal
+    case centered
+}
+
 public struct CCCardSwap<Content: View>: View {
     var count: Int
+    var style: CCCardSwapStyle
     var cardSize: CGSize
     var cardDistance: CGFloat
     var verticalDistance: CGFloat
@@ -36,6 +43,7 @@ public struct CCCardSwap<Content: View>: View {
 
     public init(
         count: Int,
+        style: CCCardSwapStyle = .diagonal,
         cardSize: CGSize = CGSize(width: 260, height: 150),
         cardDistance: CGFloat = 34,
         verticalDistance: CGFloat = 40,
@@ -45,6 +53,7 @@ public struct CCCardSwap<Content: View>: View {
         @ViewBuilder content: @escaping (Int) -> Content
     ) {
         self.count = max(1, count)
+        self.style = style
         self.cardSize = cardSize
         self.cardDistance = cardDistance
         self.verticalDistance = verticalDistance
@@ -60,14 +69,23 @@ public struct CCCardSwap<Content: View>: View {
                 card(index)
             }
         }
-        // 整堆斜切（React skewY 同构：所有卡同角，剪切一次上容器）
+        // 斜切仅 diagonal 形态（React skewY 同构：所有卡同角，剪切一次上容器）
         .projectionEffect(
             ProjectionTransform(CGAffineTransform(
-                a: 1, b: CGFloat(tan(-skewDegrees * .pi / 180)), c: 0, d: 1, tx: 0, ty: 0
+                a: 1,
+                b: style == .diagonal ? CGFloat(tan(-skewDegrees * .pi / 180)) : 0,
+                c: 0, d: 1, tx: 0, ty: 0
             ))
         )
-        .frame(width: cardSize.width + CGFloat(visibleDepth) * cardDistance,
-               height: cardSize.height + CGFloat(visibleDepth) * verticalDistance)
+        // centered 只按本尺寸 + 微探头占位，不撑版面
+        .frame(
+            width: style == .diagonal
+                ? cardSize.width + CGFloat(visibleDepth) * cardDistance
+                : cardSize.width,
+            height: style == .diagonal
+                ? cardSize.height + CGFloat(visibleDepth) * verticalDistance
+                : cardSize.height + CGFloat(visibleDepth - 1) * verticalDistance
+        )
         .task(id: count) { await runLoop() }
     }
 
@@ -78,11 +96,13 @@ public struct CCCardSwap<Content: View>: View {
         let effSlot = min(slot, visibleDepth - 1)
         let dropping = droppingCard == index
         let z = CGFloat(effSlot) * cardDistance * 1.5
+        // diagonal：纵深缩放模拟 perspective；centered：同心缩阶（每层 -5%）
+        let scale = style == .diagonal ? 900 / (900 + z) : 1 - CGFloat(effSlot) * 0.05
         content(index)
             .frame(width: cardSize.width, height: cardSize.height)
-            .scaleEffect(900 / (900 + z))   // perspective 900 的 translateZ 等价
+            .scaleEffect(scale)
             .offset(
-                x: CGFloat(effSlot) * cardDistance,
+                x: style == .diagonal ? CGFloat(effSlot) * cardDistance : 0,
                 y: -CGFloat(effSlot) * verticalDistance + (dropping ? dropOffset : 0)
             )
             .opacity(slot < visibleDepth ? 1 : 0)
