@@ -118,12 +118,6 @@ struct ButtonsPage: View {
             GallerySection(title: "玻璃族 · GlassIconButton / CircleButton") {
                 HStack(spacing: 14) {
                     CCDesigin.GlassIconButton(icon: "search-default") {}
-                    // 并排玻璃钮一律 CCGlassPair：两圆 + 内凹腰身的液态融合玻璃，全系统同形
-                    CCGlassPair {
-                        CCDesigin.GlassIconButton(icon: "chat-plus") {}
-                    } trailing: {
-                        CCDesigin.GlassIconButton(icon: "three-dots-menu-horizontal") {}
-                    }
                     CCDesigin.GlassIconButton(icon: "settings-01", tint: .cc.primary) {}
                     CCDesigin.CircleButton(icon: "arrow-left") {}
                     CCDesigin.TabBarStyleBackButton()

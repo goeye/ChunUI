@@ -469,8 +469,6 @@ public extension CCDesigin {
         let icon: String
         var tint: Color = .cc.foreground
         var size: GlassIconButtonSize = .regular
-        /// CCGlassPair 成员：融合玻璃由对组件自绘，成员只出 icon 与命中区
-        @Environment(\.ccGlassPairMember) private var isPairMember
 
         public init(icon: String, tint: Color = .cc.foreground, size: GlassIconButtonSize = .regular) {
             self.icon = icon
@@ -479,14 +477,10 @@ public extension CCDesigin {
         }
 
         public var body: some View {
-            let core = PikaIcon(icon, size: size.icon, color: tint)
+            PikaIcon(icon, size: size.icon, color: tint)
                 .frame(width: size.side, height: size.side)
                 .contentShape(Circle())
-            if isPairMember {
-                core
-            } else {
-                core.softGlassStyle(.circle)
-            }
+                .softGlassStyle(.circle)
         }
     }
 
