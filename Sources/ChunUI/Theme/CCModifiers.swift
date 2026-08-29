@@ -29,6 +29,8 @@ public enum SoftGlassShape {
     case roundedRectangle(CGFloat)
     /// 非对称圆角矩形 (topLeading, bottomLeading, bottomTrailing, topTrailing)
     case unevenRoundedRectangle(topLeading: CGFloat, bottomLeading: CGFloat, bottomTrailing: CGFloat, topTrailing: CGFloat)
+    /// 任意自定义轮廓（如 CCGlassPairShape 双圆融合）
+    case custom(AnyShape)
 }
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -90,6 +92,9 @@ public extension View {
                     )
                 )
                 .ccGlassEffectID(id, in: namespace)
+            case .custom(let anyShape):
+                self.glassEffect(.regular.interactive(), in: anyShape)
+                    .ccGlassEffectID(id, in: namespace)
             }
         } else {
             self.modifier(SoftGlassModifier(shape: shape))
@@ -161,6 +166,10 @@ public struct SoftGlassModifier: ViewModifier {
                 )
                 .stroke(strokeGradient, lineWidth: 1)
             )
+        case .custom(let anyShape):
+            anyShape
+                .fill(gradientFill)
+                .overlay(anyShape.stroke(strokeGradient, lineWidth: 1))
         }
     }
 
