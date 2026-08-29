@@ -118,6 +118,11 @@ struct ButtonsPage: View {
             GallerySection(title: "玻璃族 · GlassIconButton / CircleButton") {
                 HStack(spacing: 14) {
                     CCDesigin.GlassIconButton(icon: "search-default") {}
+                    // 并排玻璃钮一律融合簇：iOS 26 GlassEffectContainer + glassEffectUnion，旧系统单胶囊承托
+                    CCGlassCluster {
+                        CCDesigin.GlassIconButton(icon: "chat-plus") {}
+                        CCDesigin.GlassIconButton(icon: "three-dots-menu-horizontal") {}
+                    }
                     CCDesigin.GlassIconButton(icon: "settings-01", tint: .cc.primary) {}
                     CCDesigin.CircleButton(icon: "arrow-left") {}
                     CCDesigin.TabBarStyleBackButton()

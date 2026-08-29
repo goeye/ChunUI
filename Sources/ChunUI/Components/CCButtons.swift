@@ -469,6 +469,9 @@ public extension CCDesigin {
         let icon: String
         var tint: Color = .cc.foreground
         var size: GlassIconButtonSize = .regular
+        /// 簇内成员（CCGlassCluster）：iOS 26 加入 union 合成一块玻璃；18.6–25 由簇统一承托、自身不描玻璃
+        @Environment(\.ccGlassUnion) private var glassUnion
+        @Environment(\.ccGlassClusterMember) private var isClusterMember
 
         public init(icon: String, tint: Color = .cc.foreground, size: GlassIconButtonSize = .regular) {
             self.icon = icon
@@ -477,10 +480,16 @@ public extension CCDesigin {
         }
 
         public var body: some View {
-            PikaIcon(icon, size: size.icon, color: tint)
+            let core = PikaIcon(icon, size: size.icon, color: tint)
                 .frame(width: size.side, height: size.side)
                 .contentShape(Circle())
-                .softGlassStyle(.circle)
+            if isClusterMember {
+                core
+            } else {
+                core
+                    .softGlassStyle(.circle)
+                    .ccGlassUnion(glassUnion)
+            }
         }
     }
 

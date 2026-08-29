@@ -33,6 +33,8 @@ CCLeatherStyle.swift: 皮革质感
 CCTrackSeam.swift: 埋点依赖倒置座（CCTrack.onTap + .ccTrackTap）
 CCZoomTransition.swift: UIKit Zoom 英雄转场基建（锚点注册表 + 装配工厂）
 CCVideo.swift: 视频缩略/查看器（跟手拖拽回落）
+CCGlassCluster.swift: 并排玻璃钮融合簇（iOS 26 GlassEffectContainer(spacing) + 成员 glassEffectUnion 同 id 合成一块可形变玻璃；18.6–25 成员不自描、簇外一枚 capsule 软玻璃承托）+ ccGlassUnion / ccGlassClusterMember 环境值；GlassIconButtonLabel 读环境自动入簇；两枚及以上相邻玻璃圆钮必须包簇
+CCCameraPicker.swift: 系统相机命令式出口（AppHelper.presentCamera → UIImage；无相机返回 false），与 CCPHPicker 并列
 CCPHPicker.swift: 系统相册命令式出口（PHPicker → [PickedMedia]，出口挂 AppHelper）
 PhotoSlector.swift: 照片选择器（选图时间记忆 CCPhotoSelectMemory）
 SquareCropPicker.swift: 系统选图+正方裁剪
