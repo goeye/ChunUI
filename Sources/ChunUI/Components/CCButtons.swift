@@ -415,10 +415,10 @@ public extension CCDesigin {
 
 public extension CCDesigin {
     public enum GlassIconButtonMetrics {
-        public static let size: CGFloat = 50
-        /// 与 MainTabbar 图标同规（24pt）
-        public static let iconSize: CGFloat = 24
-        static let cornerRadius: CGFloat = 25
+        /// 2026-08-29 全局收 15%：50 → 42（icon 24 → 20），页头/舞台/返回钮/编辑 chrome 同步随之
+        public static let size: CGFloat = 42
+        public static let iconSize: CGFloat = 20
+        static let cornerRadius: CGFloat = 21
     }
 
     enum GlassIconButtonSize {
@@ -428,20 +428,20 @@ public extension CCDesigin {
         var side: CGFloat {
             switch self {
             case .regular: return GlassIconButtonMetrics.size
-            case .small: return 34
+            case .small: return 30
             }
         }
 
         var icon: CGFloat {
             switch self {
             case .regular: return GlassIconButtonMetrics.iconSize
-            // 小钮按直径比例缩 icon（34/50 × 24 ≈ 16），避免一刀切撑满
-            case .small: return 16
+            // 小钮按直径比例缩 icon（30/42 × 20 ≈ 14），避免一刀切撑满
+            case .small: return 14
             }
         }
     }
 
-    /// 全局液态玻璃图标按钮：正圆；regular 内 icon 24 / small 内 icon 16
+    /// 全局液态玻璃图标按钮：正圆；regular 42 内 icon 20 / small 30 内 icon 14
     struct GlassIconButton: View {
         let icon: String
         var tint: Color = .cc.foreground
