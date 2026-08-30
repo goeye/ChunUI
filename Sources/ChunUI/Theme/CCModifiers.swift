@@ -5,8 +5,8 @@
  * ╚═══════════════════════════════════════════════════════════════════════════╝
  *
  * [INPUT]: 依赖 SwiftUI View/Namespace、Color.cc 设计令牌、TimelineView 帧时钟
- * [OUTPUT]: 对外提供 CCGlassEffectContainer、ccGlassEffect/softGlassStyle、appleCard/ccGroupCard、shimmer（TimelineView 相位取模，禁 repeatForever）
- * [POS]: DesignSystem/Theme 的系统效果兼容边界；iOS 26 装配 Liquid Glass，iOS 18.6–25 统一降级为微拟物材质，业务层不得直接调用 glassEffect；循环光效一律时钟取模，禁止把相位写进动画事务
+ * [OUTPUT]: 对外提供 CCGlassEffectContainer、SoftGlassShape + SoftGlassPath（单一可动画几何类型：切形不换宿主身份）、ccGlassEffect/softGlassStyle、appleCard/ccGroupCard、shimmer（TimelineView 相位取模，禁 repeatForever）
+ * [POS]: DesignSystem/Theme 的系统效果兼容边界；iOS 26 装配 Liquid Glass，iOS 18.6–25 统一降级为微拟物材质，业务层不得直接调用 glassEffect；玻璃形状一律经 SoftGlassPath 单一类型传入（@ViewBuilder 按 case 分支会让宿主切形时整棵子树重建——UITextView 焦点丢失、键盘二次弹出的根因）；循环光效一律时钟取模，禁止把相位写进动画事务
  *
  * API:
  *   .softGlassStyle()           // 圆形软玻璃 (CircleButton 同款)
@@ -31,6 +31,80 @@ public enum SoftGlassShape {
     case unevenRoundedRectangle(topLeading: CGFloat, bottomLeading: CGFloat, bottomTrailing: CGFloat, topTrailing: CGFloat)
     /// 任意自定义轮廓（如 CCGlassPairShape 双圆融合）
     case custom(AnyShape)
+
+    /// 统一成单一 Shape 类型：切换 case 不改变宿主视图身份（见 SoftGlassPath）
+    var glassPath: SoftGlassPath {
+        switch self {
+        case .circle, .capsule:
+            return SoftGlassPath(radius: SoftGlassPath.capsuleRadius)
+        case .roundedRectangle(let radius):
+            return SoftGlassPath(radius: radius)
+        case .unevenRoundedRectangle(let tl, let bl, let br, let tr):
+            return SoftGlassPath(topLeading: tl, bottomLeading: bl, bottomTrailing: br, topTrailing: tr)
+        case .custom(let anyShape):
+            return SoftGlassPath(custom: anyShape)
+        }
+    }
+}
+
+/// 软玻璃的唯一几何类型。
+///
+/// 为什么不能直接把 Capsule / RoundedRectangle 传给 glassEffect：`@ViewBuilder` 里按 case 分支会生成不同类型的
+/// `_ConditionalContent`，宿主视图从胶囊切到圆角矩形的那一刻整棵子树被销毁重建——里面若有 UITextView，
+/// 焦点丢失、键盘收起再弹（实锤：输入坞聚焦展开后键盘二次弹出）。这里所有形状都落成同一个 Shape 类型：
+/// 四角半径可动画（AnimatableData），圆/胶囊用大半径在 path 时按短边一半夹住。
+public struct SoftGlassPath: Shape {
+    /// 圆 / 胶囊的哨兵半径：path 时按 min(w, h) / 2 夹住
+    public static let capsuleRadius: CGFloat = 10_000
+
+    public var topLeading: CGFloat
+    public var bottomLeading: CGFloat
+    public var bottomTrailing: CGFloat
+    public var topTrailing: CGFloat
+    private let custom: AnyShape?
+
+    public init(radius: CGFloat) {
+        self.init(topLeading: radius, bottomLeading: radius, bottomTrailing: radius, topTrailing: radius)
+    }
+
+    public init(topLeading: CGFloat, bottomLeading: CGFloat, bottomTrailing: CGFloat, topTrailing: CGFloat) {
+        self.topLeading = topLeading
+        self.bottomLeading = bottomLeading
+        self.bottomTrailing = bottomTrailing
+        self.topTrailing = topTrailing
+        self.custom = nil
+    }
+
+    public init(custom: AnyShape) {
+        self.topLeading = 0
+        self.bottomLeading = 0
+        self.bottomTrailing = 0
+        self.topTrailing = 0
+        self.custom = custom
+    }
+
+    public var animatableData: AnimatablePair<AnimatablePair<CGFloat, CGFloat>, AnimatablePair<CGFloat, CGFloat>> {
+        get { AnimatablePair(AnimatablePair(topLeading, bottomLeading), AnimatablePair(bottomTrailing, topTrailing)) }
+        set {
+            topLeading = newValue.first.first
+            bottomLeading = newValue.first.second
+            bottomTrailing = newValue.second.first
+            topTrailing = newValue.second.second
+        }
+    }
+
+    public func path(in rect: CGRect) -> Path {
+        if let custom { return custom.path(in: rect) }
+        let cap = min(rect.width, rect.height) / 2
+        return UnevenRoundedRectangle(
+            topLeadingRadius: min(topLeading, cap),
+            bottomLeadingRadius: min(bottomLeading, cap),
+            bottomTrailingRadius: min(bottomTrailing, cap),
+            topTrailingRadius: min(topTrailing, cap),
+            style: .continuous
+        )
+        .path(in: rect)
+    }
 }
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -70,32 +144,9 @@ public extension View {
         in namespace: Namespace.ID? = nil
     ) -> some View {
         if #available(iOS 26, *) {
-            switch shape {
-            case .circle:
-                self.glassEffect(.regular.interactive(), in: Circle())
-                    .ccGlassEffectID(id, in: namespace)
-            case .capsule:
-                self.glassEffect(.regular.interactive(), in: Capsule())
-                    .ccGlassEffectID(id, in: namespace)
-            case .roundedRectangle(let radius):
-                self.glassEffect(.regular.interactive(), in: RoundedRectangle(cornerRadius: radius, style: .continuous))
-                    .ccGlassEffectID(id, in: namespace)
-            case .unevenRoundedRectangle(let tl, let bl, let br, let tr):
-                self.glassEffect(
-                    .regular.interactive(),
-                    in: UnevenRoundedRectangle(
-                        topLeadingRadius: tl,
-                        bottomLeadingRadius: bl,
-                        bottomTrailingRadius: br,
-                        topTrailingRadius: tr,
-                        style: .continuous
-                    )
-                )
+            // 单一 Shape 类型：宿主在不同形状间切换不改身份，圆角随动画插值（禁回退成按 case 分支）
+            self.glassEffect(.regular.interactive(), in: shape.glassPath)
                 .ccGlassEffectID(id, in: namespace)
-            case .custom(let anyShape):
-                self.glassEffect(.regular.interactive(), in: anyShape)
-                    .ccGlassEffectID(id, in: namespace)
-            }
         } else {
             self.modifier(SoftGlassModifier(shape: shape))
         }
@@ -129,48 +180,12 @@ public struct SoftGlassModifier: ViewModifier {
             .shadow(color: Color.black.opacity(0.08), radius: 8, x: 0, y: 2)
     }
 
-    @ViewBuilder
+    /// 同一几何类型画底与描边：切形不换分支，圆角可动画
     private var backgroundView: some View {
-        switch shape {
-        case .circle:
-            Circle()
-                .fill(gradientFill)
-                .overlay(Circle().stroke(strokeGradient, lineWidth: 1))
-        case .capsule:
-            Capsule()
-                .fill(gradientFill)
-                .overlay(Capsule().stroke(strokeGradient, lineWidth: 1))
-        case .roundedRectangle(let radius):
-            RoundedRectangle(cornerRadius: radius, style: .continuous)
-                .fill(gradientFill)
-                .overlay(
-                    RoundedRectangle(cornerRadius: radius, style: .continuous)
-                        .stroke(strokeGradient, lineWidth: 1)
-                )
-        case .unevenRoundedRectangle(let tl, let bl, let br, let tr):
-            UnevenRoundedRectangle(
-                topLeadingRadius: tl,
-                bottomLeadingRadius: bl,
-                bottomTrailingRadius: br,
-                topTrailingRadius: tr,
-                style: .continuous
-            )
+        let path = shape.glassPath
+        return path
             .fill(gradientFill)
-            .overlay(
-                UnevenRoundedRectangle(
-                    topLeadingRadius: tl,
-                    bottomLeadingRadius: bl,
-                    bottomTrailingRadius: br,
-                    topTrailingRadius: tr,
-                    style: .continuous
-                )
-                .stroke(strokeGradient, lineWidth: 1)
-            )
-        case .custom(let anyShape):
-            anyShape
-                .fill(gradientFill)
-                .overlay(anyShape.stroke(strokeGradient, lineWidth: 1))
-        }
+            .overlay(path.stroke(strokeGradient, lineWidth: 1))
     }
 
     private var gradientFill: LinearGradient {
