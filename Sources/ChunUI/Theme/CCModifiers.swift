@@ -5,8 +5,8 @@
  * ╚═══════════════════════════════════════════════════════════════════════════╝
  *
  * [INPUT]: 依赖 SwiftUI View/Namespace、Color.cc 设计令牌、TimelineView 帧时钟
- * [OUTPUT]: 对外提供 CCGlassEffectContainer、SoftGlassShape + SoftGlassPath（单一可动画几何类型：切形不换宿主身份）、ccGlassEffect/softGlassStyle、appleCard/ccGroupCard、shimmer（TimelineView 相位取模，禁 repeatForever）
- * [POS]: DesignSystem/Theme 的系统效果兼容边界；iOS 26 装配 Liquid Glass，iOS 18.6–25 统一降级为微拟物材质，业务层不得直接调用 glassEffect；玻璃形状一律经 SoftGlassPath 单一类型传入（@ViewBuilder 按 case 分支会让宿主切形时整棵子树重建——UITextView 焦点丢失、键盘二次弹出的根因）；循环光效一律时钟取模，禁止把相位写进动画事务
+ * [OUTPUT]: 对外提供 CCGlassEffectContainer、SoftGlassShape + SoftGlassPath（可动画几何类型）+ parametricFamily（iOS 26 玻璃三族：capsule / rounded / freeform）、ccGlassEffect/softGlassStyle、appleCard/ccGroupCard、shimmer（TimelineView 相位取模，禁 repeatForever）
+ * [POS]: DesignSystem/Theme 的系统效果兼容边界；iOS 26 装配 Liquid Glass，iOS 18.6–25 统一降级为微拟物材质，业务层不得直接调用 glassEffect；iOS 26 玻璃按 parametricFamily 三族传原生形状（系统按压高亮/形变只认参数化形状，自由 path 会让高亮回退成默认胶囊）——同一消费方禁跨族切换形状（跨族 = @ViewBuilder 换分支 = 宿主子树重建，UITextView 焦点丢失、键盘二次弹出的根因；同族内半径/胶囊插值不换身份）；降级层仍走 SoftGlassPath 单一类型；循环光效一律时钟取模，禁止把相位写进动画事务
  *
  * API:
  *   .softGlassStyle()           // 圆形软玻璃 (CircleButton 同款)
@@ -31,6 +31,25 @@ public enum SoftGlassShape {
     case unevenRoundedRectangle(topLeading: CGFloat, bottomLeading: CGFloat, bottomTrailing: CGFloat, topTrailing: CGFloat)
     /// 任意自定义轮廓（如 CCGlassPairShape 双圆融合）
     case custom(AnyShape)
+
+    /// iOS 26 glassEffect 形状族：参数化原生形状（系统按压高亮正确）vs 自由 path（高亮回退胶囊，仅真异形使用）
+    enum ParametricFamily {
+        case capsule
+        case rounded(CGFloat)
+        case freeform
+    }
+
+    /// 同一消费方必须恒定一族：跨族切换 = 换 @ViewBuilder 分支 = 宿主子树重建
+    var parametricFamily: ParametricFamily {
+        switch self {
+        case .circle, .capsule:
+            return .capsule
+        case .roundedRectangle(let radius):
+            return .rounded(radius)
+        case .unevenRoundedRectangle, .custom:
+            return .freeform
+        }
+    }
 
     /// 统一成单一 Shape 类型：切换 case 不改变宿主视图身份（见 SoftGlassPath）
     var glassPath: SoftGlassPath {
@@ -144,9 +163,20 @@ public extension View {
         in namespace: Namespace.ID? = nil
     ) -> some View {
         if #available(iOS 26, *) {
-            // 单一 Shape 类型：宿主在不同形状间切换不改身份，圆角随动画插值（禁回退成按 case 分支）
-            self.glassEffect(.regular.interactive(), in: shape.glassPath)
-                .ccGlassEffectID(id, in: namespace)
+            // 参数化原生形状：系统 Liquid Glass 的按压高亮/形变只认 Capsule / RoundedRectangle 这类
+            // 参数化类型，传自由 path（SoftGlassPath）时高亮会回退成默认胶囊（金刚区圆角瓦片按下去
+            // 泛出胶囊光的根因）。三族分支各自类型稳定；消费方禁止跨族切换（见 [POS]）。
+            switch shape.parametricFamily {
+            case .capsule:
+                self.glassEffect(.regular.interactive(), in: Capsule())
+                    .ccGlassEffectID(id, in: namespace)
+            case .rounded(let radius):
+                self.glassEffect(.regular.interactive(), in: RoundedRectangle(cornerRadius: radius, style: .continuous))
+                    .ccGlassEffectID(id, in: namespace)
+            case .freeform:
+                self.glassEffect(.regular.interactive(), in: shape.glassPath)
+                    .ccGlassEffectID(id, in: namespace)
+            }
         } else {
             self.modifier(SoftGlassModifier(shape: shape))
         }
