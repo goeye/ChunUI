@@ -9,7 +9,8 @@ let package = Package(
     name: "ChunUI",
     defaultLocalization: "en",
     platforms: [
-        .iOS("18.6")
+        .iOS("18.6"),
+        .macOS("13.0")
     ],
     products: [
         .library(name: "ChunUI", targets: ["ChunUI"]),
