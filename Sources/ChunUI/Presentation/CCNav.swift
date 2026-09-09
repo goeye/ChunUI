@@ -1,3 +1,4 @@
+#if canImport(UIKit)
 /**
  * [INPUT]: 依赖 CCPresentationAnchor 的窗口发现（CCNativeSheet.swift）
  * [OUTPUT]: 对外提供 CCNav.pop —— 包内组件（返回钮等）的导航返回唯一出口
@@ -23,3 +24,5 @@ public enum CCNav {
 public enum CCPhotoSelectMemory {
     nonisolated(unsafe) public static var lastCreatedTime: Date?
 }
+
+#endif

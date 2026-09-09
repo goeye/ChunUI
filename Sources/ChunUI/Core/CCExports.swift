@@ -1,3 +1,4 @@
+#if canImport(UIKit)
 /**
  * [INPUT]: 系统框架 SwiftUI/UIKit/Combine/Foundation/QuartzCore
  * [OUTPUT]: 模块级隐式导入（与宿主 Chat0IM AppDelegate 同款范式，仅限系统框架）
@@ -9,3 +10,5 @@
 @_exported import QuartzCore
 @_exported import SwiftUI
 @_exported import UIKit
+
+#endif

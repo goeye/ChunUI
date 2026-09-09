@@ -1,3 +1,4 @@
+#if canImport(UIKit)
 /**
  * [INPUT]: 依赖 UIKit / SwiftUI UIViewRepresentable
  * [OUTPUT]: 对外提供 CCZoomID、ZoomAnchorRegistry、CCZoom.transition(sourceID:)、.ccZoomSource(id:) / .ccZoomDestination(id:)
@@ -179,3 +180,5 @@ extension View {
         }
     }
 }
+
+#endif

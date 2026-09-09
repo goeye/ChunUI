@@ -1,3 +1,4 @@
+#if canImport(UIKit)
 /**
  * [INPUT]: 依赖 HotReloadHosting、Color.cc、UIKit UISheetPresentationController、AppHelper.showBottomAlert（未保存三选一）
  * [OUTPUT]: 对外提供 CCSheetConfig（含 .profile 磨砂 / extendsToBottomEdge 吃穿底安全区；zoomSourceID + .zoom(from:) 锚点转场）/ CCEditSheetContext / CCPresentationAnchor / CCNativeSheetController
@@ -538,3 +539,5 @@ private struct CCSheetBottomEdgeBleed: ViewModifier {
         }
     }
 }
+
+#endif

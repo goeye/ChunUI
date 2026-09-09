@@ -1,3 +1,4 @@
+#if canImport(UIKit)
 //
 //  CCVideo.swift
 //  Chat0IM
@@ -347,3 +348,5 @@ public final class CCVideoViewerController: UIViewController {
         }
     }
 }
+
+#endif

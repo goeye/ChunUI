@@ -1,3 +1,4 @@
+#if canImport(UIKit)
 //
 //  CCSweepLight.swift
 //  Chat0IM
@@ -89,3 +90,5 @@ private struct SweepOverlay: View {
         }
     }
 }
+
+#endif

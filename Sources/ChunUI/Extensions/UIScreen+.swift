@@ -1,3 +1,4 @@
+#if canImport(UIKit)
 //
 //  UIScreen+.swift
 //  Chat0IM
@@ -20,3 +21,5 @@ extension UIScreen {
         return scene?.screen ?? UIScreen()
     }
 }
+
+#endif

@@ -1,3 +1,4 @@
+#if canImport(UIKit)
 //
 //  ParticleDissolve.swift
 //  Chat0IM
@@ -426,3 +427,5 @@ private final class DisplayLinkProxy {
     public init(target: DustDissolveLayer) { self.target = target }
     @objc func tick() { target?.step() }
 }
+
+#endif

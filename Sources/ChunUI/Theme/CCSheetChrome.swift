@@ -1,3 +1,4 @@
+#if canImport(UIKit)
 /**
  * [INPUT]: 依赖 UIScreen.displayCornerRadius
  * [OUTPUT]: 对外提供 CCSheetChrome.floatingShape(edgeInset:) / unevenPath——沉底 Alert 非对称圆角
@@ -65,3 +66,5 @@ public enum CCSheetChrome {
         return path
     }
 }
+
+#endif

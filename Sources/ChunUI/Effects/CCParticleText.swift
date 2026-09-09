@@ -1,3 +1,4 @@
+#if canImport(UIKit)
 //
 //  CCParticleText.swift
 //  ChunUI
@@ -304,3 +305,5 @@ final class CCParticleTextModel {
         .frame(height: 260)
         .background(Color.cc.background)
 }
+
+#endif

@@ -1,3 +1,4 @@
+#if canImport(UIKit)
 /**
  * [INPUT]: 依赖 Color.cc/Font.cc、CCSheetChrome、CCNeoButton、CCDesigin.GlassIconButton、PikaIcon
  * [OUTPUT]: 对外提供 CCAlertCenter / CCBottomAlertView / CCAlertWindow——顶层沉底 Alert（屏边 8pt、可点）
@@ -265,3 +266,5 @@ public final class CCAlertWindow {
             }
     }
 }
+
+#endif

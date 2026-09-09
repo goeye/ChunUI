@@ -1,3 +1,4 @@
+#if canImport(UIKit)
 /**
  * [INPUT]: 依赖 PhotosUI PHPickerViewController、UniformTypeIdentifiers、PickedMedia/PickedVideoFile（R2Uploader）、CCPresentationAnchor、UploadProgressCenter
  * [OUTPUT]: 对外提供 MediaPickLimit.maxPerSession（图+视频合计 6）与 MainViewModel.presentPHPicker——命令式系统相册多选，回调 [PickedMedia]
@@ -173,3 +174,5 @@ private final class CCPHPickerCoordinator: NSObject, PHPickerViewControllerDeleg
         }
     }
 }
+
+#endif

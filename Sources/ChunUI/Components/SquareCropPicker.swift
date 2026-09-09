@@ -1,3 +1,4 @@
+#if canImport(UIKit)
 //
 //  SquareCropPicker.swift
 //  Chat0IM
@@ -64,3 +65,5 @@ public struct SquareCropPicker: UIViewControllerRepresentable {
         }
     }
 }
+
+#endif

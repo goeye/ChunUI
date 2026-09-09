@@ -1,3 +1,4 @@
+#if canImport(UIKit)
 /**
  * ╔═══════════════════════════════════════════════════════════════════════════╗
  * ║                          CCColors.swift                                    ║
@@ -403,3 +404,5 @@ nonisolated public struct CCColorAccessor {
     /// 近黑 (原黑灰)
     public var neonGray: Color { .hex("1f1f1f") }
 }
+
+#endif

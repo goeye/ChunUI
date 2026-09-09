@@ -1,3 +1,4 @@
+#if canImport(UIKit)
 import SwiftUI
 import UIKit
 import OSLog
@@ -534,3 +535,5 @@ public struct TopCardPreviewView: View {
 }
 
 #endif 
+
+#endif

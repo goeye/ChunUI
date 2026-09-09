@@ -1,3 +1,4 @@
+#if canImport(UIKit)
 //import UIKit
 //import ImageIO
 //import Photos
@@ -68,3 +69,5 @@
 //        return dateFormatter.string(from: asset.creationDate ?? Date())
 //    }
 //}
+
+#endif

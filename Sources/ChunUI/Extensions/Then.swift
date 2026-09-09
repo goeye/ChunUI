@@ -1,3 +1,4 @@
+#if canImport(UIKit)
 // swiftlint:disable all
 // MIT 许可证 (MIT)
 //
@@ -89,3 +90,5 @@ extension Set: Then {}
   extension UIRectEdge: Then {}
 #endif
 // swiftlint:enable all
+
+#endif

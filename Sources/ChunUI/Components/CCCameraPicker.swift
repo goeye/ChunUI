@@ -1,3 +1,4 @@
+#if canImport(UIKit)
 /**
  * [INPUT]: 依赖 UIKit UIImagePickerController（sourceType .camera）、CCPresentationAnchor 顶层呈现锚点、AppHelper 触感
  * [OUTPUT]: 对外提供 AppHelper.presentCamera(onCapture:)——命令式拉起系统相机拍一张，回调主线程 UIImage；无相机（模拟器）静默返回 false
@@ -57,3 +58,5 @@ private final class CCCameraPickerCoordinator: NSObject, UIImagePickerController
         picker.dismiss(animated: true)
     }
 }
+
+#endif
