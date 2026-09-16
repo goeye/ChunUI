@@ -4,24 +4,126 @@
 //
 
 /**
- * [INPUT]: 依赖 Color.cc/Font.cc 设计令牌、Color.mix 拟物混色、PikaIcon
- * [OUTPUT]: 对外提供 CCNeoButton（primary/secondary/ghost/outline/danger 五变体 × small/medium/large；primary 可 accent 覆色；async loading + 弹簧按压）、CCNeoIconButton、CCNeoPressStyle、CCListRowPressStyle（列表行按压灰底）
- * [POS]: DesignSystem/Compents 的微拟物按钮族，移植 Laper Button 设计语言（上亮下暗微渐变 + 上光下影渐变发丝边 + 紧贴投影 + 按压弹簧 + Promise 自动 loading），供全应用统一使用；阴影全族收束为 radius 3 以内的贴地影，质感由边而非影承担
+ * [INPUT]: 依赖 Color.cc/Font.cc 设计令牌、Color.mix 拟物混色、PikaIcon、AppHelper.mada
+ * [OUTPUT]: 对外提供 CCNeoButton（primary/secondary/ghost/outline/danger 五变体 × small/medium/large；primary 可 accent 覆色；async loading + 弹簧按压）、View.ccNeoChrome / ccNeoChromeCircle（自定义内容套同款质感；圆仅输入坞发送特例）、RoundedRectangle.ccButton、CCNeoIconButton、CCNeoPressStyle、CCListRowPressStyle、CCSegmentedControl
+ * [POS]: DesignSystem/Compents 按钮族。主钮圆角 = height×0.38 连续圆（禁胶囊）。质感对齐 Laper-app EmphasisEffect：1px 深一线 ring + 上亮下实受光渐变 + 顶沿 1.5px 内高光（只蒙上半，禁整圈白描边）。segment 复刻 17005:772 凹槽+色洗拇指，高 56，槽与拇指同为圆角矩形。业务页禁自绘扁平胶囊，自定义内容走 ccNeoChrome；仅发送钮可走 ccNeoChromeCircle。
  * [PROTOCOL]: 变更时更新此头部，然后检查 CLAUDE.md
  */
 
 import SwiftUI
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// MARK: - Laper EmphasisEffect（顶沿高光只蒙上半，禁整圈白描边）
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+/// 顶沿内高光：色带只在上缘显影，下半 mask 掉——不是绕一圈的白线
+private struct CCTopLip<S: InsettableShape>: View {
+    var shape: S
+    var color: Color
+    var lineWidth: CGFloat = 1.5
+
+    var body: some View {
+        shape
+            .inset(by: lineWidth)
+            .strokeBorder(color, lineWidth: lineWidth)
+            .mask {
+                LinearGradient(
+                    stops: [
+                        .init(color: .white, location: 0),
+                        .init(color: .white.opacity(0.45), location: 0.22),
+                        .init(color: .clear, location: 0.50),
+                    ],
+                    startPoint: .top,
+                    endPoint: .bottom
+                )
+            }
+            .allowsHitTesting(false)
+    }
+}
+
+/// Laper-app 有色强调钮：底 token+30% 白 · 受光 28%白→token · 顶沿 52%白 · ring token+18%黑 1px · shadow-xs
+struct CCLaperEmphasis<S: InsettableShape>: View {
+    var shape: S
+    var token: Color
+
+    var body: some View {
+        let base = token.mix(with: .white, amount: 0.30)
+        let from = token.mix(with: .white, amount: 0.28)
+        let lip = token.mix(with: .white, amount: 0.52)
+        let ring = token.mix(with: .black, amount: 0.18)
+
+        ZStack {
+            shape.fill(base)
+            shape.fill(LinearGradient(colors: [from, token], startPoint: .top, endPoint: .bottom))
+        }
+        .overlay { CCTopLip(shape: shape, color: lip, lineWidth: 1.5) }
+        .overlay { shape.strokeBorder(ring, lineWidth: 1) }
+        .shadow(color: .black.opacity(0.10), radius: 1.5, y: 1)
+    }
+}
+
+/// 白/浅底凸面（secondary / segment 拇指）：1px 发丝环 + 顶沿高光，禁整圈白描边
+struct CCNeumorphRaised<S: InsettableShape>: View {
+    var shape: S
+    var fill: Color
+    var tint: Color? = nil
+
+    @Environment(\.colorScheme) private var colorScheme
+
+    var body: some View {
+        let isDark = colorScheme == .dark
+        let ring: Color = tint?.mix(with: .white, amount: 0.38)
+            ?? Color.black.opacity(isDark ? 0.40 : 0.18)
+        let lip = Color.white.opacity(isDark ? 0.28 : 0.72)
+
+        ZStack {
+            shape.fill(fill.opacity(isDark ? 0.92 : 0.88))
+            if let tint {
+                shape.fill(tint.opacity(0.16))
+            }
+            shape.fill(
+                LinearGradient(
+                    colors: [Color.black.opacity(0), Color.black.opacity(0.06)],
+                    startPoint: .top,
+                    endPoint: .bottom
+                )
+            )
+        }
+        .overlay { CCTopLip(shape: shape, color: lip, lineWidth: 1.5) }
+        .overlay { shape.strokeBorder(ring, lineWidth: 1) }
+        .shadow(color: (tint ?? Color.black).opacity(tint == nil ? 0.06 : 0.10), radius: 1.5, y: 1)
+    }
+}
+
+/// 772 凹槽：#f0f0f0 + 1px #c4c4c4 内环，无顶白线
+struct CCNeumorphWell<S: InsettableShape>: View {
+    var shape: S
+
+    var body: some View {
+        shape
+            .fill(
+                Color.adaptive(light: .hex("f0f0f0"), dark: Color.cc.sidebarAccent)
+                    .shadow(.inner(color: .black.opacity(0.06), radius: 2, x: 0, y: 1.5))
+            )
+            .overlay {
+                shape.strokeBorder(
+                    Color.adaptive(light: .hex("c4c4c4"), dark: Color.cc.border),
+                    lineWidth: 1
+                )
+            }
+    }
+}
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // MARK: - 变体 / 尺寸
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 public enum CCNeoVariant {
-    case primary    // 主题色实底：上亮下暗微渐变 + 顶部内高光
-    case secondary  // 卡片底 + 发丝边 + 极柔阴影
+    case primary    // 主题色实底 + 862 内沿
+    case secondary  // 909 白钮
     case ghost      // 无底无边，按压显灰阶
-    case outline    // 描边，按压转主题色
-    case danger     // 危险红实底
+    case outline    // 描边
+    case danger     // 危险色实底 + 862 内沿
 }
 
 public enum CCNeoSize {
@@ -62,6 +164,101 @@ public enum CCNeoSize {
     }
 }
 
+extension RoundedRectangle {
+    /// 主钮圆角 = height × 0.38 连续圆。禁胶囊。
+    public static func ccButton(height: CGFloat) -> RoundedRectangle {
+        RoundedRectangle(cornerRadius: height * 0.38, style: .continuous)
+    }
+}
+
+/// CCNeoButton 五变体表面。自定义内容走 View.ccNeoChrome，禁业务页自绘扁平底。
+struct CCNeoSurface<S: InsettableShape>: View {
+    var variant: CCNeoVariant
+    var shape: S
+    var accent: Color? = nil
+
+    var body: some View {
+        switch variant {
+        case .primary:
+            CCLaperEmphasis(shape: shape, token: accent ?? Color.cc.primary)
+        case .danger:
+            CCLaperEmphasis(shape: shape, token: Color.cc.destructive)
+        case .secondary:
+            CCNeumorphRaised(shape: shape, fill: Color.cc.card)
+        case .outline:
+            shape.strokeBorder(Color.cc.border, lineWidth: 1)
+        case .ghost:
+            Color.clear
+        }
+    }
+}
+
+public struct CCNeoChromeModifier: ViewModifier {
+    var variant: CCNeoVariant
+    var height: CGFloat
+    var disabled: Bool = false
+    var accent: Color? = nil
+    var circular: Bool = false
+
+    public init(
+        variant: CCNeoVariant,
+        height: CGFloat,
+        disabled: Bool = false,
+        accent: Color? = nil,
+        circular: Bool = false
+    ) {
+        self.variant = variant
+        self.height = height
+        self.disabled = disabled
+        self.accent = accent
+        self.circular = circular
+    }
+
+    public func body(content: Content) -> some View {
+        Group {
+            if circular {
+                content
+                    .background { CCNeoSurface(variant: variant, shape: Circle(), accent: accent) }
+                    .contentShape(Circle())
+            } else {
+                let shape = RoundedRectangle.ccButton(height: height)
+                content
+                    .background { CCNeoSurface(variant: variant, shape: shape, accent: accent) }
+                    .contentShape(shape)
+            }
+        }
+        .opacity(disabled ? 0.45 : 1)
+    }
+}
+
+public extension View {
+    /// 自定义内容套 CCNeoButton 同款圆角矩形质感。Apple/Google 双行 CTA 等走这里，禁自绘扁平胶囊。
+    func ccNeoChrome(
+        _ variant: CCNeoVariant,
+        height: CGFloat,
+        disabled: Bool = false,
+        accent: Color? = nil
+    ) -> some View {
+        modifier(CCNeoChromeModifier(variant: variant, height: height, disabled: disabled, accent: accent))
+    }
+
+    /// 输入坞发送钮特例：同款质感，外形正圆。别处禁用。
+    func ccNeoChromeCircle(
+        _ variant: CCNeoVariant,
+        diameter: CGFloat,
+        disabled: Bool = false,
+        accent: Color? = nil
+    ) -> some View {
+        modifier(CCNeoChromeModifier(
+            variant: variant,
+            height: diameter,
+            disabled: disabled,
+            accent: accent,
+            circular: true
+        ))
+    }
+}
+
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // MARK: - CCNeoButton
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -71,10 +268,9 @@ public struct CCNeoButton: View {
     let title: String
     var variant: CCNeoVariant = .primary
     var size: CCNeoSize = .medium
-    var icon: String? = nil          // pika 图标名，置于文字左侧
+    var icon: String? = nil
     var fullWidth: Bool = false
     var disabled: Bool = false
-    /// primary 覆色（如微信绿）；nil 走主题 primary
     var accent: Color? = nil
     var action: () async -> Void
 
@@ -99,15 +295,9 @@ public struct CCNeoButton: View {
     }
 
     @State private var isLoading = false
-    @State private var isPressed = false
 
     private var isDisabled: Bool { disabled || isLoading }
-    private var fillColor: Color { accent ?? Color.cc.primary }
-
-    /// 全按钮唯一形状事实源（背景/描边/裁切共用）
-    private var shape: RoundedRectangle {
-        RoundedRectangle(cornerRadius: size.height * 0.38, style: .continuous)
-    }
+    private var shape: RoundedRectangle { .ccButton(height: size.height) }
 
     public var body: some View {
         Button {
@@ -137,135 +327,110 @@ public struct CCNeoButton: View {
             .padding(.horizontal, size.hPadding)
             .frame(height: size.height)
             .frame(maxWidth: fullWidth ? .infinity : nil)
-            .background(backgroundLayer)
-            .clipShape(shape)
-            .overlay(borderLayer)
-            .compositingGroup()
-            .shadow(color: shadowColor, radius: 3, x: 0, y: 1.5)
+            .background { CCNeoSurface(variant: variant, shape: shape, accent: accent) }
+            .contentShape(shape)
             .opacity(isDisabled && !isLoading ? 0.45 : 1)
         }
         .buttonStyle(CCNeoPressStyle())
         .disabled(isDisabled)
     }
 
-    // ━━━ 变体外观 ━━━
-
     private var foreground: Color {
         switch variant {
         case .primary: return accent != nil ? .white : .cc.primaryForeground
         case .danger: return .white
-        case .secondary, .ghost: return .cc.foreground
-        case .outline: return .cc.foreground
-        }
-    }
-
-    @ViewBuilder
-    private var backgroundLayer: some View {
-        switch variant {
-        case .primary:
-            shape.fill(
-                LinearGradient(
-                    colors: [
-                        fillColor.mix(with: .white, amount: 0.14),
-                        fillColor,
-                        fillColor.mix(with: .black, amount: 0.10),
-                    ],
-                    startPoint: .top,
-                    endPoint: .bottom
-                )
-                .shadow(.inner(color: .white.opacity(0.42), radius: 1.5, x: 0, y: 1.5))
-            )
-        case .danger:
-            shape.fill(
-                LinearGradient(
-                    colors: [
-                        Color.cc.destructive.mix(with: .white, amount: 0.12),
-                        Color.cc.destructive,
-                        Color.cc.destructive.mix(with: .black, amount: 0.12),
-                    ],
-                    startPoint: .top,
-                    endPoint: .bottom
-                )
-                .shadow(.inner(color: .white.opacity(0.35), radius: 1.5, x: 0, y: 1.5))
-            )
-        case .secondary:
-            shape.fill(Color.cc.card)
-        case .ghost, .outline:
-            shape.fill(Color.clear)
-        }
-    }
-
-    /// 淡边质感：实底用「上光下影」渐变发丝边勾勒体积，平底用中性发丝边定义边界
-    @ViewBuilder
-    private var borderLayer: some View {
-        switch variant {
-        case .primary:
-            shape.strokeBorder(
-                LinearGradient(
-                    colors: [
-                        Color.white.opacity(0.45),
-                        fillColor.mix(with: .black, amount: 0.28).opacity(0.55),
-                    ],
-                    startPoint: .top,
-                    endPoint: .bottom
-                ),
-                lineWidth: 0.66
-            )
-        case .danger:
-            shape.strokeBorder(
-                LinearGradient(
-                    colors: [
-                        Color.white.opacity(0.4),
-                        Color.cc.destructive.mix(with: .black, amount: 0.3).opacity(0.55),
-                    ],
-                    startPoint: .top,
-                    endPoint: .bottom
-                ),
-                lineWidth: 0.66
-            )
-        case .secondary:
-            shape.strokeBorder(Color.cc.border.opacity(0.9), lineWidth: CGFloat.cc.hairline)
-        case .outline:
-            shape.strokeBorder(Color.cc.border, lineWidth: 1)
-        case .ghost:
-            EmptyView()
-        }
-    }
-
-    private var shadowColor: Color {
-        switch variant {
-        case .primary: return fillColor.opacity(0.2)
-        case .danger: return Color.cc.destructive.opacity(0.18)
-        case .secondary: return Color.cc.shadow.opacity(0.05)
-        case .ghost, .outline: return .clear
+        case .secondary, .ghost, .outline: return .cc.foreground
         }
     }
 }
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-// MARK: - CCNeoIconButton（图标变体：方形按压区 + 可选 secondary 底）
+// MARK: - CCSegmentedControl（Figma 17005:772：凹槽圆角矩形 + 色洗拇指 + 格间 0.5px 分隔）
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-/// 图标按钮的纯视觉标签（无 Button 语义），供 CCNeoIconButton 与 Menu label 共用
+/// 56pt 圆角矩形分段（772 形制 ×2 高）。行上禁再包 fieldCard。选中拇指 = 白底 16% primary 洗 + 顶沿高光。禁胶囊。
+public struct CCSegmentedControl<Value: Hashable>: View {
+    @Binding private var selection: Value
+    private let items: [(Value, String)]
+
+    public init(selection: Binding<Value>, items: [(Value, String)]) {
+        self._selection = selection
+        self.items = items
+    }
+
+    private let height: CGFloat = 56
+    private var trackShape: RoundedRectangle { .ccButton(height: height) }
+    private var selectedIndex: Int {
+        items.firstIndex(where: { $0.0 == selection }) ?? 0
+    }
+
+    public var body: some View {
+        HStack(spacing: 0) {
+            ForEach(items, id: \.0) { item in
+                let selected = selection == item.0
+                Button {
+                    AppHelper.shared.mada(.light)
+                    selection = item.0
+                } label: {
+                    Text(item.1)
+                        .font(.system(size: 16, weight: .medium))
+                        .foregroundStyle(selected ? Color.cc.primary : Color.cc.mutedForeground)
+                        .frame(maxWidth: .infinity)
+                        .frame(height: height)
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .accessibilityAddTraits(selected ? [.isSelected] : [])
+            }
+        }
+        .background {
+            GeometryReader { geo in
+                let cell = geo.size.width / CGFloat(max(items.count, 1))
+                CCNeumorphWell(shape: trackShape)
+                CCNeumorphRaised(shape: trackShape, fill: Color.cc.card, tint: Color.cc.primary)
+                    .frame(width: cell, height: height)
+                    .offset(x: cell * CGFloat(selectedIndex))
+            }
+        }
+        .overlay {
+            GeometryReader { geo in
+                let cell = geo.size.width / CGFloat(max(items.count, 1))
+                ForEach(0..<max(items.count - 1, 0), id: \.self) { index in
+                    let hide = selectedIndex == index || selectedIndex == index + 1
+                    Rectangle()
+                        .fill(Color(red: 114 / 255, green: 114 / 255, blue: 112 / 255).opacity(hide ? 0 : 0.4))
+                        .frame(width: 0.5, height: 24)
+                        .position(x: cell * CGFloat(index + 1), y: height / 2)
+                }
+            }
+            .allowsHitTesting(false)
+        }
+        .frame(height: height)
+        .animation(.spring(response: 0.32, dampingFraction: 0.78), value: selection)
+    }
+}
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// MARK: - CCNeoIconButton（图标变体：方形按压区 + 可选 909 白底）
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
 public struct CCNeoIconLabel: View {
     let icon: String
     var diameter: CGFloat = 40
     var iconSize: CGFloat = 18
     var tint: Color = .cc.mutedForeground
-    var filled: Bool = false          // true = secondary 卡片底，false = ghost
+    var filled: Bool = false
 
     public var body: some View {
+        let shape = RoundedRectangle.ccButton(height: diameter)
         PikaIcon(icon, size: iconSize, color: tint)
             .frame(width: diameter, height: diameter)
             .background {
                 if filled {
-                    Circle()
-                        .fill(Color.cc.card)
-                        .overlay(Circle().strokeBorder(Color.cc.border.opacity(0.9), lineWidth: CGFloat.cc.hairline))
-                        .shadow(color: Color.cc.shadow.opacity(0.05), radius: 3, x: 0, y: 1)
+                    CCNeumorphRaised(shape: shape, fill: Color.cc.card)
                 }
             }
-            .contentShape(Circle())
+            .contentShape(shape)
     }
 }
 
@@ -274,7 +439,7 @@ public struct CCNeoIconButton: View {
     var diameter: CGFloat = 40
     var iconSize: CGFloat = 18
     var tint: Color = .cc.mutedForeground
-    var filled: Bool = false          // true = secondary 卡片底，false = ghost
+    var filled: Bool = false
     var action: () -> Void
 
     public var body: some View {
@@ -289,7 +454,7 @@ public struct CCNeoIconButton: View {
 }
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-// MARK: - 按压弹簧（全族统一手感：0.97 缩放 + 弹簧回弹）
+// MARK: - 按压弹簧
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 public struct CCNeoPressStyle: ButtonStyle {
@@ -302,7 +467,6 @@ public struct CCNeoPressStyle: ButtonStyle {
     }
 }
 
-/// 列表行按压：轻微灰底，给对象/往来/我的等 row 点击感知（不做缩放，避免与卡片布局抢戏）
 public struct CCListRowPressStyle: ButtonStyle {
     public init() {}
 
@@ -318,12 +482,13 @@ public struct CCListRowPressStyle: ButtonStyle {
 }
 
 #Preview {
-    VStack(spacing: 14) {
+    VStack(spacing: 18) {
         CCNeoButton("和顾问聊聊 ta", variant: .primary, size: .large, icon: "sparkle-ai01", fullWidth: true) {}
-        CCNeoButton("查看档案", variant: .secondary, size: .medium, icon: "user-love-heart") {}
+        CCNeoButton("查看档案", variant: .secondary, size: .medium, icon: "user-love-heart", fullWidth: true) {}
         CCNeoButton("幽灵按钮", variant: .ghost, size: .medium) {}
         CCNeoButton("描边按钮", variant: .outline, size: .small) {}
         CCNeoButton("删除", variant: .danger, size: .small, icon: "delete-dustbin01") {}
+        PreviewSegment()
         HStack {
             CCNeoIconButton(icon: "grid-dashboard01") {}
             CCNeoIconButton(icon: "layer-two", filled: true) {}
@@ -331,4 +496,15 @@ public struct CCListRowPressStyle: ButtonStyle {
     }
     .padding(24)
     .background(Color.cc.background)
+}
+
+private struct PreviewSegment: View {
+    @State private var gender = 1
+    var body: some View {
+        CCSegmentedControl(selection: $gender, items: [
+            (1, "男"),
+            (2, "女"),
+            (0, "其他"),
+        ])
+    }
 }

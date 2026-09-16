@@ -232,11 +232,16 @@ struct FractalPage: View {
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 8) {
                     ForEach(kinds, id: \.0) { name, k in
-                        Text(name)
-                            .ccText(font: .cc.sm, color: kind == k ? .cc.primaryForeground : .cc.foreground)
-                            .padding(.horizontal, 12).padding(.vertical, 7)
-                            .background(kind == k ? Color.cc.primary : Color.cc.muted, in: Capsule())
-                            .onTapGesture { kind = k }
+                        Button {
+                            kind = k
+                        } label: {
+                            Text(name)
+                                .ccText(font: .cc.sm, color: kind == k ? .cc.primaryForeground : .cc.foreground)
+                                .padding(.horizontal, 12)
+                                .frame(height: 32)
+                                .ccNeoChrome(kind == k ? .primary : .secondary, height: 32)
+                        }
+                        .buttonStyle(CCNeoPressStyle())
                     }
                 }
                 .padding(.cc.base)
@@ -280,6 +285,13 @@ struct ShaderZooPage: View {
             GallerySection(title: "RainbowLine · 彩虹线") {
                 RainbowLineView()
                     .frame(height: 60)
+            }
+            GallerySection(title: "CCSkyHeroCard · 极光卡 + 点阵 + 云") {
+                CCSkyHeroCard(height: 260) {
+                    Text("云心")
+                        .font(.cc.title2Bold)
+                        .foregroundStyle(Color.cc.foreground)
+                }
             }
         }
         .navigationTitle("Shader Zoo")

@@ -11,11 +11,10 @@
  * API:
  *   CCDesigin.Button("文字", icon: nil, size: .large/.medium/.small, variant: .primary/.secondary, enable: true) { }
  *
- * 设计规范 (Figma 精准复刻):
- * 1. Primary: Kumo 受光质感——1px 深一线 ring + 受光渐变 + 顶部 1px 内高光 + shadow-xs（Laper 强调钮同构）
- * 2. Secondary: 柔和微拟物 (斜向渐变 + 简单内高光)
+ * 设计规范:
+ * 1. Primary / Secondary 一律转发 CCNeoButton / ccNeoChrome（圆角 height×0.38，禁胶囊）
+ * 2. pinkGlassButtonStyle / softButtonStyle 是旧入口，内部已归一到 CCNeoSurface
  * 3. 交互: 按下 scale(0.97)
- * 4. iOS 26+: Secondary 使用 Liquid Glass
  *
  * [PROTOCOL]: 变更时更新此头部，然后检查 CLAUDE.md
  */
@@ -27,102 +26,50 @@ import SwiftUI
 // MARK: - 霓虹粉玻璃按钮样式 (Primary)
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-/// 有色强调钮质感（Cloudflare Kumo 配方，Laper Button 同构）：
-/// ring = 主色混 10% 黑的 1px 描边（比底色深一线）· 受光 = 主色混 15% 白 → 主色 自上而下渐变
-/// 顶部 1px 内高光 = 主色混 30% 白 · 阴影只留 shadow-xs——立体感来自受光，不靠光晕
+/// 旧入口：有色强调钮。内部归一到 CCNeoButton.primary（圆角矩形，禁胶囊）。
 public struct PinkGlassButtonStyle: ViewModifier {
     let enable: Bool
-
-    /// 按钮主色 - 设计系统 primary（Kumo 配方颜色全由 token 推算，本层不持有色值）
-    private var token: Color { .cc.primary }
-
-    private var ring: Color { token.mix(with: .black, amount: 0.10) }
-    private var insetHighlight: Color { token.mix(with: .white, amount: 0.30) }
-    private var lightFrom: Color { token.mix(with: .white, amount: 0.15) }
 
     public func body(content: Content) -> some View {
         content
             .background {
-                // 受光渐变（EmphasisEffect：from 15% 白 → token）
-                LinearGradient(
-                    colors: [lightFrom, token],
-                    startPoint: .top, endPoint: .bottom
-                )
+                GeometryReader { geo in
+                    CCNeoSurface(
+                        variant: .primary,
+                        shape: RoundedRectangle.ccButton(height: max(geo.size.height, 1))
+                    )
+                }
             }
-            .clipShape(Capsule())
-            .overlay {
-                // inset 0 1 0 顶部内高光：一线 30% 白，只在上缘显影
-                Capsule()
-                    .inset(by: 1)
-                    .strokeBorder(insetHighlight, lineWidth: 1)
-                    .mask {
-                        LinearGradient(
-                            stops: [
-                                .init(color: .white, location: 0),
-                                .init(color: .clear, location: 0.38),
-                            ],
-                            startPoint: .top, endPoint: .bottom
-                        )
-                    }
-            }
-            .overlay {
-                // 1px ring：深一线描边收住轮廓
-                Capsule().strokeBorder(ring, lineWidth: 1)
-            }
-            // shadow-xs（Kumo：强调钮零光晕）
-            .shadow(color: .black.opacity(enable ? 0.06 : 0), radius: 1.5, y: 1)
             .opacity(enable ? 1 : 0.5)
     }
 }
 
 extension View {
-    /// 应用黑色玻璃按钮样式 (primary)
+    /// 应用主色强调钮质感（转发 CCNeoSurface.primary）
     public func pinkGlassButtonStyle(enable: Bool = true) -> some View {
         modifier(PinkGlassButtonStyle(enable: enable))
     }
 }
 
-/// 柔和微拟物样式 (secondary / 浅色按钮)
+/// 旧入口：浅底凸面。内部归一到 CCNeoButton.secondary（圆角矩形，禁胶囊）。
 public struct SoftButtonStyle: ViewModifier {
     let backgroundColor: Color
 
     public func body(content: Content) -> some View {
         content
-            .background(softGradient)
-            .clipShape(Capsule())
-            .overlay(innerHighlight)
-            .shadow(color: Color.white.opacity(0.4), radius: 2, x: -1, y: -1)
-            .shadow(color: Color.black.opacity(0.1), radius: 3, x: 1, y: 1)
-    }
-
-    private var softGradient: LinearGradient {
-        LinearGradient(
-            stops: [
-                .init(color: backgroundColor.mix(with: .white, amount: 0.05), location: 0),
-                .init(color: backgroundColor, location: 0.3),
-                .init(color: backgroundColor.mix(with: .black, amount: 0.08), location: 1)
-            ],
-            startPoint: .topLeading,
-            endPoint: .bottomTrailing
-        )
-    }
-
-    private var innerHighlight: some View {
-        Capsule()
-            .stroke(
-                LinearGradient(
-                    colors: [Color.white.opacity(0.5), Color.clear, Color.black.opacity(0.1)],
-                    startPoint: .topLeading,
-                    endPoint: .bottomTrailing
-                ),
-                lineWidth: 1
-            )
-            .blur(radius: 0.5)
+            .background {
+                GeometryReader { geo in
+                    CCNeumorphRaised(
+                        shape: RoundedRectangle.ccButton(height: max(geo.size.height, 1)),
+                        fill: backgroundColor
+                    )
+                }
+            }
     }
 }
 
 extension View {
-    /// 应用柔和微拟物样式 (secondary)
+    /// 应用浅底凸面质感（转发 CCNeumorphRaised）
     public func softButtonStyle(backgroundColor: Color) -> some View {
         modifier(SoftButtonStyle(backgroundColor: backgroundColor))
     }
@@ -247,79 +194,58 @@ public extension CCDesigin {
         }
 
         public var body: some View {
-            CCButton(enable: enable) {
-                CCTrack.onTap("btn:" + text)
-                await action()
-            } label: { isLoading in
-                buttonLabel(isLoading: isLoading)
-            }
-        }
+            let neoSize: CCNeoSize = {
+                switch size {
+                case .small: return .small
+                case .medium: return .medium
+                case .large: return .large
+                }
+            }()
+            let neoVariant: CCNeoVariant = variant == .primary ? .primary : .secondary
 
-        @ViewBuilder
-        private func buttonLabel(isLoading: Bool) -> some View {
-            if #available(iOS 26, *), variant == .secondary {
-                // iOS 26 secondary: Liquid Glass
-                secondaryTextContent(isLoading: isLoading)
-                    .contentShape(Capsule())
-                    .containerShape(Capsule())
-                    .glassEffect()
-            } else if variant == .primary {
-                // Primary: 黑色玻璃、白字
-                primaryTextContent(isLoading: isLoading)
-                    .pinkGlassButtonStyle(enable: enable)
+            if let icon {
+                CCButton(enable: enable) {
+                    CCTrack.onTap("btn:" + text)
+                    await action()
+                } label: {
+                    labeledContent(icon: icon, neoSize: neoSize)
+                        .ccNeoChrome(neoVariant, height: neoSize.height, disabled: !enable)
+                }
             } else {
-                // Secondary: 微拟物
-                secondaryTextContent(isLoading: isLoading)
-                    .softButtonStyle(backgroundColor: size == .small ? .cc.background : .cc.muted)
-            }
-        }
-
-        // ━━━ 字体：small 用 subheadlineBold，其他用 bodyBold ━━━
-        private var buttonFont: Font {
-            size == .small ? .cc.subheadlineBold : .cc.bodyBold
-        }
-
-        // ━━━ Primary 文字 (白字) ━━━
-        private func primaryTextContent(isLoading: Bool) -> some View {
-            HStack(alignment: .center, spacing: 6) {
-                if isLoading {
-                    ProgressView()
-                        .tint(enable ? Color.cc.primaryForeground : .cc.mutedForeground)
-                } else {
-                    if size == .small, let icon {
-                        CCDesigin.ICON(imageName: icon, size: 24, color: enable ? .cc.primaryForeground : .cc.mutedForeground)
-                    }
-                    if !text.isEmpty {
-                        Text(text)
-                            .font(buttonFont)
-                            .foregroundStyle(enable ? Color.cc.primaryForeground : .cc.mutedForeground)
-                    }
+                CCNeoButton(
+                    text,
+                    variant: neoVariant,
+                    size: neoSize,
+                    fullWidth: size != .small,
+                    disabled: !enable
+                ) {
+                    await action()
                 }
             }
-            .when(size != .small) { $0.frame(maxWidth: .infinity, alignment: .center) }
-            .padding(.horizontal, size == .small ? 14 : 0)
-            .frame(height: size == .large ? 58 : (size == .medium ? 48 : 38))
         }
 
-        // ━━━ Secondary 文字 ━━━
-        private func secondaryTextContent(isLoading: Bool) -> some View {
+        private func labeledContent(icon: String, neoSize: CCNeoSize) -> some View {
             HStack(alignment: .center, spacing: 6) {
-                if isLoading {
-                    ProgressView()
-                        .tint(enable ? Color.cc.foreground : .cc.mutedForeground)
-                } else {
-                    if size == .small, let icon {
-                        CCDesigin.ICON(imageName: icon, size: 24, color: enable ? .cc.foreground : .cc.mutedForeground)
-                    }
-                    if !text.isEmpty {
-                        Text(text)
-                            .ccText(font: buttonFont, color: enable ? .cc.foreground : .cc.mutedForeground)
-                    }
+                CCDesigin.ICON(
+                    imageName: icon,
+                    size: 24,
+                    color: enable
+                        ? (variant == .primary ? .cc.primaryForeground : .cc.foreground)
+                        : .cc.mutedForeground
+                )
+                if !text.isEmpty {
+                    Text(text)
+                        .font(size == .small ? Font.cc.subheadlineBold : Font.cc.bodyBold)
+                        .foregroundStyle(
+                            enable
+                                ? (variant == .primary ? Color.cc.primaryForeground : Color.cc.foreground)
+                                : Color.cc.mutedForeground
+                        )
                 }
             }
-            .when(size != .small) { $0.frame(maxWidth: .infinity, alignment: .center) }
-            .padding(.horizontal, size == .small ? 14 : 0)
-            .frame(height: size == .large ? 58 : (size == .medium ? 48 : 38))
+            .padding(.horizontal, neoSize.hPadding)
+            .frame(height: neoSize.height)
+            .frame(maxWidth: size == .small ? nil : .infinity)
         }
     }
 }

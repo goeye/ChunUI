@@ -1,7 +1,7 @@
 /**
  * [INPUT]: URL (String 或 URL 类型)、CCDesigin.GlassIconButton、PikaIcon.Name.close
  * [OUTPUT]: 应用内浏览器视图（顶栏左上 regular 大玻璃关闭，顶缘忽略安全区）
- * [POS]: DesignSystem/Compents - 通用 WebView 封装
+ * [POS]: DesignSystem/Compents - 通用 WebView 封装；底栏工具条圆角矩形（禁胶囊）
  *
  * [PROTOCOL]:
  * 1. 使用 Combine 订阅 WKWebView 的 estimatedProgress
@@ -111,7 +111,7 @@ public struct InAppBrowser: View {
         }
         .padding(.horizontal, 8)
         .padding(.vertical, 6)
-        .modifier(GlassCapsuleModifier())
+        .modifier(GlassToolbarModifier())
         .padding(.horizontal, 60)
         .padding(.bottom, 24)
     }
@@ -275,26 +275,27 @@ public struct CCWebView: UIViewRepresentable {
 }
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-// MARK: - 玻璃胶囊背景
+// MARK: - 玻璃圆角矩形工具条
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-private struct GlassCapsuleModifier: ViewModifier {
+private struct GlassToolbarModifier: ViewModifier {
     func body(content: Content) -> some View {
+        let shape = RoundedRectangle.ccButton(height: 48)
         if #available(iOS 26, *) {
             content
-                .contentShape(Capsule())
-                .containerShape(Capsule())
+                .contentShape(shape)
+                .containerShape(shape)
                 .glassEffect(.regular.interactive())
         } else {
             content
                 .background {
-                    Capsule()
+                    shape
                         .fill(.ultraThinMaterial)
                         .shadow(color: .cc.shadow.opacity(0.08), radius: 12, x: 0, y: 4)
                         .shadow(color: .cc.shadow.opacity(0.04), radius: 2, x: 0, y: 1)
                 }
                 .overlay {
-                    Capsule().stroke(Color.cc.border, lineWidth: 0.5)
+                    shape.stroke(Color.cc.border, lineWidth: 0.5)
                 }
         }
     }
