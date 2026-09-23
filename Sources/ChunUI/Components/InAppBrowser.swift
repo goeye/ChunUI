@@ -1,6 +1,6 @@
 /**
  * [INPUT]: URL (String 或 URL 类型)、CCDesigin.GlassIconButton、PikaIcon.Name.close
- * [OUTPUT]: 应用内浏览器视图（顶栏左上 regular 大玻璃关闭，顶缘忽略安全区）
+ * [OUTPUT]: 应用内浏览器视图（顶栏左上 regular 大玻璃关闭，顶缘忽略安全区）；CCWebView + WebViewState 亦可被宿主单独内嵌
  * [POS]: DesignSystem/Compents - 通用 WebView 封装；底栏工具条圆角矩形（禁胶囊）
  *
  * [PROTOCOL]:
@@ -162,14 +162,19 @@ public struct InAppBrowser: View {
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 public final class WebViewState: ObservableObject {
-    @Published var title: String = ""
-    @Published var progress: Double = 0
-    @Published var isLoading: Bool = true
-    @Published var canGoBack: Bool = false
-    @Published var canGoForward: Bool = false
+    @Published public internal(set) var title: String = ""
+    @Published public internal(set) var progress: Double = 0
+    @Published public internal(set) var isLoading: Bool = true
+    @Published public internal(set) var canGoBack: Bool = false
+    @Published public internal(set) var canGoForward: Bool = false
 
     weak var webView: WKWebView?
     var cancellables = Set<AnyCancellable>()
+
+    public init() {}
+
+    /// 宿主内嵌时的重载入口（如应用重新发布后刷新）
+    public func reload() { webView?.reload() }
 
     /// 绑定 WKWebView 的 KVO 属性
     func bind(to webView: WKWebView) {
@@ -208,6 +213,12 @@ public final class WebViewState: ObservableObject {
 public struct CCWebView: UIViewRepresentable {
     let url: URL
     @ObservedObject var state: WebViewState
+
+    /// 宿主可直接内嵌（不带 InAppBrowser 的顶栏与工具条）；state 由宿主持有以读进度、触发重载
+    public init(url: URL, state: WebViewState) {
+        self.url = url
+        self.state = state
+    }
 
     public func makeUIView(context: Context) -> WKWebView {
         let config = WKWebViewConfiguration()
