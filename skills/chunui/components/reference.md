@@ -30,6 +30,7 @@ CCDesigin.CCInput(placeholder:text:)        // 单行 36pt
 CCDesigin.CCTextArea(placeholder:text:)     // 多行 112pt
 CCDesigin.CCToggle(isOn:)                   // 44×24 主题色胶囊
 CCDesigin.CCCheckbox(isChecked:label:)
+CCChatComposer(placeholder:text:running:onSend:onStop:)  // 对话输入坞（自长 + 发送 / 停止圆钮）
 CCNeoInput(placeholder:text:icon:secure:)   // 微拟物输入（卡片底+主题色焦点环；secure 为口令框）
 CCSegmentedControl(selection:items:)        // 56pt 凹槽胶囊分段
 CCDesigin.CCDatePicker                       // 日历网格
