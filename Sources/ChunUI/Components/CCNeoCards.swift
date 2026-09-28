@@ -5,7 +5,7 @@
 
 /**
  * [INPUT]: 依赖 Color.cc 设计令牌与 CGFloat.cc.hairline、PikaIcon
- * [OUTPUT]: 对外提供 CCAppleCard 卡片容器（连续圆角 + 发丝边 + 三级软阴影，移植 Laper AppleCard）、CCNeoInput 微拟物输入框（焦点环）与 CCCuteTag 统计胶囊（1:1 移植 Laper CuteTag：24pt 不透明胶囊 + 1px 边 + 贴地微影 + 12pt 图标，严禁 blur）
+ * [OUTPUT]: 对外提供 CCAppleCard 卡片容器（连续圆角 + 发丝边 + 三级软阴影，移植 Laper AppleCard）、CCNeoInput 微拟物输入框（焦点环，secure 即口令框）与 CCCuteTag 统计胶囊（1:1 移植 Laper CuteTag：24pt 不透明胶囊 + 1px 边 + 贴地微影 + 12pt 图标，严禁 blur）
  * [POS]: DesignSystem/Compents 的微拟物容器/表单族，与 CCNeoButton 同一设计语言，供卡片与表单场景统一使用
  * [PROTOCOL]: 变更时更新此头部，然后检查 CLAUDE.md
  */
@@ -59,11 +59,14 @@ public struct CCNeoInput: View {
     let placeholder: String
     @Binding var text: String
     var icon: String? = nil
+    var secure: Bool = false
 
-    public init(placeholder: String, text: Binding<String>, icon: String? = nil) {
+    /// secure = 口令输入（SecureField），同一副外观；键盘类型 / 内容类型由调用方在外层挂
+    public init(placeholder: String, text: Binding<String>, icon: String? = nil, secure: Bool = false) {
         self.placeholder = placeholder
         self._text = text
         self.icon = icon
+        self.secure = secure
     }
 
     @FocusState private var focused: Bool
@@ -73,7 +76,7 @@ public struct CCNeoInput: View {
             if let icon {
                 PikaIcon(icon, size: 16, color: .cc.mutedForeground)
             }
-            TextField(placeholder, text: $text)
+            field
                 .font(Font.cc.body)
                 .foregroundStyle(Color.cc.foreground)
                 .tint(Color.cc.primary)
@@ -97,6 +100,15 @@ public struct CCNeoInput: View {
                 .shadow(color: Color.cc.primary.opacity(focused ? 0.22 : 0), radius: 6)
         }
         .animation(.easeInOut(duration: 0.16), value: focused)
+    }
+
+    @ViewBuilder
+    private var field: some View {
+        if secure {
+            SecureField(placeholder, text: $text)
+        } else {
+            TextField(placeholder, text: $text)
+        }
     }
 }
 

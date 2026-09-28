@@ -4,9 +4,10 @@
 CC 组件族：按钮/表单/卡片/呈现/媒体 40+ 件，全部主题驱动零业务。
 
 成员清单
-CCButtons.swift: 按钮族（GlassButton/MetalGlassButton/GlassIconButton/CircleButton/返回钮，Pow glow/shake 按压）；PinkGlassButtonStyle = Kumo 强调钮受光配方（1px 深一线 ring + 主色混 15% 白→主色受光渐变 + 顶部 1px 内高光混 30% 白 + shadow-xs，零光晕，颜色全由 primary token 推算）
-CCNeoButton.swift: 微拟物按钮五变体×三尺寸（async loading + 显式 public init）+ CCNeoPressStyle/CCListRowPressStyle
+CCNeoButton.swift: 微拟物按钮五变体×三尺寸（圆角 height×0.38 连续圆，禁胶囊；async loading + 显式 public init）+ View.ccNeoChrome / ccNeoChromeCircle（圆仅输入坞发送特例）/ RoundedRectangle.ccButton + CCNeoPressStyle/CCListRowPressStyle；主钮质感对齐 Laper-app EmphasisEffect（1px 深一线 ring + 受光渐变 + 顶沿内高光只蒙上半）；CCSegmentedControl 复刻 17005:772（#f0f0f0 凹槽圆角矩形 + 选中白底 16% primary 洗拇指，高 56，行上禁 fieldCard）
+CCButtons.swift: 按钮族（GlassButton/MetalGlassButton/GlassIconButton/CircleButton/返回钮，Pow glow/shake 按压）；CCDesigin.Button 无 icon 转发 CCNeoButton，有 icon 走 ccNeoChrome；pinkGlassButtonStyle / softButtonStyle 旧入口内部已归一 CCNeoSurface（圆角矩形，禁胶囊）
 CCNeoCards.swift: CCAppleCard 连续圆角三级软阴影卡 + CCNeoInput + CCCuteTag/CCKeycapTag 胶囊标签
+CCChatComposer.swift: 通用对话输入坞，1~6 行自长 + 正圆发送钮，running 时换停止；业务坞在宿主里包它
 CCForms.swift: CCInput/CCTextArea/CCToggle/CCCheckbox/CCDatePicker 表单族；CCToggle = Kumo Switch 形制（扁 squircle 轨道 40×20 + 满高正方滑块双层阴影 + 1px ring 开态深一线，150ms ease-out，热区补足 44pt）
 CCTexts.swift: CCText/CCTyperText 打字机
 CCImages.swift: CCWebImage 内建 URLCache 加载器（CCImageLoader.custom 可整体接管）+ UserAvatar + CCAvatarFallback（宿主资产优先 SF 兜底）

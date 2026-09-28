@@ -147,12 +147,20 @@ struct FormsPage: View {
     @State private var longText = ""
     @State private var toggle = true
     @State private var checked = true
+    @State private var segment = 1
 
     var body: some View {
         GalleryScroll {
             GallerySection(title: "CCInput / CCTextArea") {
                 CCDesigin.CCInput(placeholder: "单行输入", text: $text)
                 CCDesigin.CCTextArea(placeholder: "多行输入", text: $longText)
+            }
+            GallerySection(title: "CCSegmentedControl · 凹槽胶囊") {
+                CCSegmentedControl(selection: $segment, items: [
+                    (0, "Left"),
+                    (1, "Center"),
+                    (2, "Right"),
+                ])
             }
             GallerySection(title: "CCToggle / CCCheckbox") {
                 HStack(spacing: 20) {
@@ -206,8 +214,9 @@ struct CardsPage: View {
                     ForEach(["SwiftUI", "Metal", "Monochrome", "Neo", "Glass", "Aurora"], id: \.self) { chip in
                         Text(chip)
                             .ccText(font: .cc.sm, color: .cc.foreground)
-                            .padding(.horizontal, 10).padding(.vertical, 6)
-                            .background(Color.cc.muted, in: Capsule())
+                            .padding(.horizontal, 10)
+                            .frame(height: 28)
+                            .ccNeoChrome(.secondary, height: 28)
                     }
                 }
             }

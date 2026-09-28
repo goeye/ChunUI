@@ -13,7 +13,10 @@ Text("…").ccText(font: .cc.base, color: .cc.foreground)   // 文字统一写�
 
 | 组件 | 用途 | 关键参数 |
 |---|---|---|
-| `CCNeoButton("标题") { await … }` | 主力微拟物按钮，async 自动 loading | variant: .primary/.secondary/.ghost/.outline/.danger · size: .large/.medium/.small · icon(pika 名) · fullWidth · accent 覆色 |
+| `CCNeoButton("标题") { await … }` | 主力微拟物钮（圆角 height×0.38，禁胶囊）；质感对齐 Laper EmphasisEffect | variant: .primary/.secondary/.ghost/.outline/.danger · size: .large/.medium/.small · icon(pika 名) · fullWidth · accent 覆色 |
+| `CCSegmentedControl(selection:items:)` | 56pt 凹槽圆角矩形分段（Figma 772×2 高，禁胶囊）；选中 16% 主题色洗拇指 | items: `[(Value, String)]` |
+| `View.ccNeoChrome(_:height:)` | 自定义内容套 CCNeoButton 同款圆角矩形质感 | variant · height · disabled · accent |
+| `View.ccNeoChromeCircle(_:diameter:)` | 同款质感正圆（仅输入坞发送特例） | variant · diameter · disabled · accent |
 | `CCDesigin.GlassIconButton(icon:)` | 正圆液态玻璃图标钮（iOS26 Liquid Glass/以下微拟物） | tint · size: .regular(50)/.small(34) |
 | `CCDesigin.CircleButton(icon:)` | 玻璃圆钮兼容入口 | |
 | `CCDesigin.CircularBackButton` / `TabBarStyleBackButton` | 返回钮（无 action 自动 CCNav.pop） | |
@@ -27,7 +30,9 @@ CCDesigin.CCInput(placeholder:text:)        // 单行 36pt
 CCDesigin.CCTextArea(placeholder:text:)     // 多行 112pt
 CCDesigin.CCToggle(isOn:)                   // 44×24 主题色胶囊
 CCDesigin.CCCheckbox(isChecked:label:)
-CCNeoInput(placeholder:text:icon:)          // 微拟物输入（卡片底+主题色焦点环）
+CCChatComposer(placeholder:text:running:onSend:onStop:)  // 对话输入坞（自长 + 发送 / 停止圆钮）
+CCNeoInput(placeholder:text:icon:secure:)   // 微拟物输入（卡片底+主题色焦点环；secure 为口令框）
+CCSegmentedControl(selection:items:)        // 56pt 凹槽胶囊分段
 CCDesigin.CCDatePicker                       // 日历网格
 ```
 
